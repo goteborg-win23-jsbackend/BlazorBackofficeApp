@@ -1,7 +1,79 @@
 ﻿@page "/"
+@using BlazorBackofficeApp.Contexts
+@using BlazorBackofficeApp.Data
+@using BlazorBackofficeApp.Models
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext DbContext
 
+@code {
+
+    
+
+    List<ApplicationUser> users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await DbContext.Users.ToListAsync();
+
+        
+    }
+}
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+
+
+<AuthorizeView>
+    <Authorized>
+        @if (users != null && users.Any())
+        {
+            <div class="user-container">
+                @foreach (var user in users)
+                {
+                    <div class="user-card">
+                        
+                        <div><strong>@user.FirstName @user.LastName</strong></div>
+                        <div>Email: @user.Email</div>
+                        
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div>Hittade inga användare</div>
+        }
+                <AntiforgeryToken />
+               
+    </Authorized>
+    <NotAuthorized>
+      
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+
+<style>
+    .user-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .user-card {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        width: calc(33.3333% - 20px); 
+        box-sizing: border-box;
+    }
+
+    
+    
+</style>
