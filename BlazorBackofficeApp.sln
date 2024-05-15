@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorBackofficeApp", "BlazorBackofficeApp\BlazorBackofficeApp\BlazorBackofficeApp.csproj", "{160C0713-C0F7-483B-A839-D6AF4FF58FA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorBackofficeApp.Client", "BlazorBackofficeApp\BlazorBackofficeApp.Client\BlazorBackofficeApp.Client.csproj", "{C32A1A7D-A64B-405E-9352-056391B2FF53}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{160C0713-C0F7-483B-A839-D6AF4FF58FA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{160C0713-C0F7-483B-A839-D6AF4FF58FA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{160C0713-C0F7-483B-A839-D6AF4FF58FA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{160C0713-C0F7-483B-A839-D6AF4FF58FA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C32A1A7D-A64B-405E-9352-056391B2FF53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C32A1A7D-A64B-405E-9352-056391B2FF53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C32A1A7D-A64B-405E-9352-056391B2FF53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C32A1A7D-A64B-405E-9352-056391B2FF53}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EEAD91E5-099E-44F6-A04C-719AD262FFCD}
+	EndGlobalSection
+EndGlobal
