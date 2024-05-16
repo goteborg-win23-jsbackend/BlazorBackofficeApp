@@ -2,20 +2,25 @@
 @using BlazorBackofficeApp.Contexts
 @using BlazorBackofficeApp.Data
 @using BlazorBackofficeApp.Models
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext DbContext
 
 @code {
 
-    
+    private readonly UserManager<ApplicationUser> _userManager;
+
+
 
     List<ApplicationUser> users;
+    List<IdentityRole> roles;
 
+    
     protected override async Task OnInitializedAsync()
     {
         users = await DbContext.Users.ToListAsync();
-
         
+
     }
 }
 <PageTitle>Home</PageTitle>
@@ -38,6 +43,7 @@ Welcome to your new app.
                         <div><strong>@user.FirstName @user.LastName</strong></div>
                         <div>Email: @user.Email</div>
                         
+                        
                     </div>
                 }
             </div>
@@ -46,6 +52,25 @@ Welcome to your new app.
         {
             <div>Hittade inga användare</div>
         }
+        @if (roles != null && roles.Any())
+        {
+            <div class="user-container">
+                @foreach (var role in roles)
+                {
+                    <div class="user-card">
+
+                        <div><strong>@role.Id</strong></div>
+                        
+
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div>Hittade inga användare</div>
+        }
+       
                 <AntiforgeryToken />
                
     </Authorized>
