@@ -44,9 +44,7 @@
 }
 <PageTitle>Users</PageTitle>
 
-<h1>Web Application Blazor: User Service</h1>
 
-Users:
 
 
 
@@ -54,6 +52,9 @@ Users:
     <Authorized>
         @if (userList != null && userList.Any())
         {
+            <h1>Web Application Blazor: User Service</h1>
+
+            <p>Users:</p>
             <div class="user-container">
                 @foreach (var user in userList)
                 {
@@ -85,7 +86,9 @@ Users:
                
     </Authorized>
     <NotAuthorized>
-        
+        <h1>Welcome Admin</h1>
+
+        <p>Login to access your services</p>
     </NotAuthorized>
 </AuthorizeView>
 
