@@ -13,7 +13,7 @@
 
 
     List<ApplicationUser> users;
-    List<IdentityRole> roles;
+    
 
     
     protected override async Task OnInitializedAsync()
@@ -44,24 +44,6 @@ Welcome to your new app.
                         <div>Email: @user.Email</div>
                         
                         
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div>Hittade inga användare</div>
-        }
-        @if (roles != null && roles.Any())
-        {
-            <div class="user-container">
-                @foreach (var role in roles)
-                {
-                    <div class="user-card">
-
-                        <div><strong>@role.Id</strong></div>
-                        
-
                     </div>
                 }
             </div>
