@@ -63,14 +63,14 @@
                         <div><strong>@user.FirstName @user.LastName</strong></div>
                         <div>Email: @user.Email</div>
                         <button class="btn btn-danger" @onclick="() => DeleteUser(user.Id)">Remove</button>
-                        <button class="btn btn-warning" >Update</button>
+                        <button class="btn btn-success">Update</button>
                         <p>@resultDelete</p>
                     </div>
                 }
             </div>
             <div>
-               <h5>Create Admin</h5>
-                <button class="btn btn-warning">Create</button>
+               <h5>Create Admin user</h5>
+                <button class="btn btn-lg btn-primary">Create</button>
             </div>
         }
         else
