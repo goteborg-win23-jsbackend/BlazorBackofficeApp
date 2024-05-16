@@ -2,62 +2,90 @@
 @using BlazorBackofficeApp.Contexts
 @using BlazorBackofficeApp.Data
 @using BlazorBackofficeApp.Models
+@using BlazorBackofficeApp.Services
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext DbContext
+@inject UserService UserService
+@inject RoleManager<IdentityRole> RoleManager
+@rendermode InteractiveServer 
 
 @code {
+    string resultDelete = "";
+    List<ApplicationUser> userList;
 
-    private readonly UserManager<ApplicationUser> _userManager;
-
-
-
-    List<ApplicationUser> users;
-    
-
-    
     protected override async Task OnInitializedAsync()
     {
-        users = await DbContext.Users.ToListAsync();
-        
+        var user = await DbContext.Users.ToListAsync();
+
+        await LoadUsers();
+        user = userList;
+    }
+
+    private async Task DeleteUser(string userId)
+    {
+        var result = await UserService.DeleteUser(userId);
+        if (result)
+        {
+            resultDelete = "User was deleted succesfully";
+            userList = await DbContext.Users.ToListAsync();
+        }
+        else
+        {
+            resultDelete = "Error deleting user.";
+        }
+
 
     }
+    private async Task LoadUsers()
+    {
+        userList = await DbContext.Users.ToListAsync();
+    }
 }
-<PageTitle>Home</PageTitle>
+<PageTitle>Users</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Web Application Blazor: User Service</h1>
 
-Welcome to your new app.
+Users:
 
 
 
 <AuthorizeView>
     <Authorized>
-        @if (users != null && users.Any())
+        @if (userList != null && userList.Any())
         {
             <div class="user-container">
-                @foreach (var user in users)
+                @foreach (var user in userList)
                 {
                     <div class="user-card">
                         
                         <div><strong>@user.FirstName @user.LastName</strong></div>
                         <div>Email: @user.Email</div>
-                        
-                        
+                        <button class="btn btn-danger" @onclick="() => DeleteUser(user.Id)">Remove</button>
+                        <button class="btn btn-warning" >Update</button>
+                        <p>@resultDelete</p>
                     </div>
                 }
+            </div>
+            <div>
+               <h5>Create Admin</h5>
+                <button class="btn btn-warning">Create</button>
             </div>
         }
         else
         {
             <div>Hittade inga användare</div>
         }
+
+        <div>
+
+        </div>
        
                 <AntiforgeryToken />
                
     </Authorized>
     <NotAuthorized>
-      
+        
     </NotAuthorized>
 </AuthorizeView>
 
