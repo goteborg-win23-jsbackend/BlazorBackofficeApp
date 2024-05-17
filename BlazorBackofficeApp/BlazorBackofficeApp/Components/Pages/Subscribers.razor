@@ -1,0 +1,35 @@
+﻿@page "/subscribers"
+@using BlazorBackofficeApp.Data.Entities
+@using BlazorBackofficeApp.Services
+@inject UserService UserService
+
+<h3>Subscribers</h3>
+
+
+
+@if (subscribers == null)
+{
+    <p>Loading...</p>
+}
+else if (!subscribers.Any())
+{
+    <p>No subscribers found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var subscriber in subscribers)
+        {
+            <li>@subscriber.Email</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<SubscribersEntity> subscribers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        subscribers = await UserService.GetAllSubscribersAsync();
+    }
+}
