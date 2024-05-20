@@ -1,0 +1,27 @@
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Identity.Client;
+
+namespace BlazorBackofficeApp.Hubs;
+
+public class ChatHub : Hub
+{
+    public override Task OnConnectedAsync()
+    {
+        return base.OnConnectedAsync();
+    }
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        return base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task Typing(string userName)
+    {
+        await Clients.Others.SendAsync("UserTyping", userName);
+    }
+
+    public async Task SendMessageToAll(string userNAme, string message, DateTime dateTime)
+    {
+        await Clients.All.SendAsync("RecieveMessage", userNAme, message, dateTime);
+    }
+}
