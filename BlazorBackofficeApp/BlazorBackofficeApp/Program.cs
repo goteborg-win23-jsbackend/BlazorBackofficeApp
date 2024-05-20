@@ -2,6 +2,7 @@ using BlazorBackofficeApp.Client.Pages;
 using BlazorBackofficeApp.Components;
 using BlazorBackofficeApp.Components.Account;
 using BlazorBackofficeApp.Data;
+using BlazorBackofficeApp.Hubs;
 using BlazorBackofficeApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -42,6 +43,13 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+builder.Services.AddSignalR();
+
+
+
+
+
+
 
 var app = builder.Build();
 
@@ -70,5 +78,5 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
+app.MapHub<ChatHub>("/chathub");
 app.Run();

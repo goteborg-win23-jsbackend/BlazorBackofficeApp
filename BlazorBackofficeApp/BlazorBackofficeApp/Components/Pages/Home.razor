@@ -8,6 +8,7 @@
 @inject ApplicationDbContext DbContext
 @inject UserService UserService
 @inject RoleManager<IdentityRole> RoleManager
+@inject UserManager<ApplicationUser> UserMananger
 @rendermode InteractiveServer
 
 <PageTitle>Users</PageTitle>
@@ -25,6 +26,8 @@
 
         await LoadUsers();
         user = userList;
+
+        
     }
 
     private async Task DeleteUser(string userId)

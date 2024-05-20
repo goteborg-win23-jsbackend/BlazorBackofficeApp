@@ -1,0 +1,28 @@
+﻿.chat-bubble-right {
+    text-align: right;
+    background-color: beige;
+    margin-right: auto;
+    border-radius: 15px;
+    padding: 10px;
+    max-width: 75%;
+    border: 1px solid black;
+}
+
+.chat-bubble-left {
+    text-align: left;
+    background-color: #CCFFCC;
+    margin-left: auto;
+    border-radius: 15px;
+    padding: 10px;
+    max-width: 75%;
+    border: 1px solid black;
+}
+
+.list-group-items{
+    list-style-type:none;
+
+}
+
+.List-group{
+    
+}
