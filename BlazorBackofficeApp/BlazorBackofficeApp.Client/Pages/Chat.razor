@@ -48,7 +48,7 @@
                     <textarea class="form-control" placeholder="Message" @bind="currentMessage" @oninput="NotifyTyping"></textarea>
                 </div>
                 <div class="col-2 my-3">
-                    <button class="btn btn-success w-100" @onclick="Send">Send Message</button>
+                    <button class="btn btn-success " @onclick="Send">Send</button>
                 </div>
             </div>
         </div>
@@ -78,12 +78,15 @@
 
     private async Task Send()
     {
+        if (!string.IsNullOrEmpty(currentMessage))
+        {
+            var newMessage = new ChatMessage { UserName = userName, Message = currentMessage, Created = DateTime.Now };
 
-        var newMessage = new ChatMessage { UserName = userName, Message = currentMessage , Created = DateTime.Now};
-            
-        await connection!.SendAsync("SendMessageToAll", newMessage.UserName, newMessage.Message, newMessage.Created);
+            await connection!.SendAsync("SendMessageToAll", newMessage.UserName, newMessage.Message, newMessage.Created);
 
-        currentMessage = string.Empty;
+            currentMessage = string.Empty;
+        }
+
         
     }
 
