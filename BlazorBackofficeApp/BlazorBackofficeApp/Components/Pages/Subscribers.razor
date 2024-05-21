@@ -1,7 +1,10 @@
 ﻿@page "/subscribers"
 @using BlazorBackofficeApp.Data.Entities
+@using BlazorBackofficeApp.Models
 @using BlazorBackofficeApp.Services
 @inject UserService UserService
+@inject HttpClient HttpClient
+@rendermode InteractiveServer
 
 <h3>Subscribers</h3>
 
@@ -25,11 +28,68 @@ else
     </ul>
 }
 
+<h3>Send Email</h3>
+<button @onclick="SendEmail">Send email</button>
+@* <EditForm FormName="EmailForm" Model="EmailForm" OnValidSubmit="SendEmail" method="post">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>To Email:</label>
+        <InputText @bind-Value="EmailForm.To" />
+    </div>
+    <div>
+        <label>Subject:</label>
+        <InputText @bind-Value="EmailForm.Subject" />
+    </div>
+    <div>
+        <label>HTML Body:</label>
+        <InputTextArea @bind-Value="EmailForm.HtmlBody" />
+    </div>
+    <div>
+        <label>Plain Text Body:</label>
+        <InputTextArea @bind-Value="EmailForm.PlainText" />
+    </div>
+
+    <button class="btn btn-secondary" type="submit">Send Email</button>
+
+    <p>@responseFromProvider</p>
+</EditForm> *@
+
+
 @code {
+    private string responseFromProvider = "";
+
     private List<SubscribersEntity> subscribers;
+
+    [SupplyParameterFromForm]
+    public EmailRequest EmailForm { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         subscribers = await UserService.GetAllSubscribersAsync();
+    }
+
+    public async Task SendEmail()
+    {
+        var requestUrl = "https://multipleemailprovider.azurewebsites.net";
+        var result = new EmailRequest
+        {
+            To = "staranderh@gmail.com",
+            Subject = "Provar från app",
+            HtmlBody = "Provar från app",
+            PlainText = "Provar från app"
+        };
+        var response = await HttpClient.PostAsJsonAsync(requestUrl, result);
+        
+
+        if (response.IsSuccessStatusCode)
+        {
+            responseFromProvider = "Email sent successfully";
+        }
+        else
+        {
+            responseFromProvider = "Something went wrong";
+        }
     }
 }
