@@ -2,7 +2,7 @@
 
 public class EmailRequest
 {
-    public string To { get; set; } = null!;
+    public List<string> To { get; set; } = null!;
 
     public string Subject { get; set; } = null!;
 

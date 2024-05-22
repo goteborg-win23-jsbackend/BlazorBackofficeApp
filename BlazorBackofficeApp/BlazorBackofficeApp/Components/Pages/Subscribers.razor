@@ -2,13 +2,113 @@
 @using BlazorBackofficeApp.Data.Entities
 @using BlazorBackofficeApp.Models
 @using BlazorBackofficeApp.Services
+@using System.Text.Json.Serialization
+@using Azure.Messaging.ServiceBus;
+@using Newtonsoft.Json;
 @inject UserService UserService
 @inject HttpClient HttpClient
 @rendermode InteractiveServer
+@inject IConfiguration Configuration
+@code {
 
+    private List<SubscribersEntity> subscribers = new List<SubscribersEntity>();
+    private string ServiceBusConnectionString = "";
+    private string responseFromProvider = "";
+    private string QueueName = "email_request";
+    private EmailRequest emailForm = new EmailRequest();
+    protected override async Task OnInitializedAsync()
+    {
+        subscribers = await UserService.GetAllSubscribersAsync();
+
+        ServiceBusConnectionString = Configuration["ServiceBusConnection"]!;
+        if (string.IsNullOrEmpty(ServiceBusConnectionString))
+        {
+            responseFromProvider = "ServiceBusConnection is not set.";
+        }
+    }
+
+
+    private string ToEmailsString
+    {
+        get => string.Join(", ", emailForm.To ?? Enumerable.Empty<string>());
+        set
+        {
+            emailForm.To = value?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
+        }
+    }
+
+    private void AddToEmail(string email)
+    {
+        emailForm.To ??= new List<string>();
+        emailForm.To.Add(email);
+        ToEmailsString = string.Join(", ", emailForm.To);
+    }
+    public async Task SendEmail()
+    {
+        // Create a Service Bus client
+        ServiceBusClient client = new ServiceBusClient(ServiceBusConnectionString);
+        // Create a sender for the queue
+        ServiceBusSender sender = client.CreateSender(QueueName);
+
+        // Serialize the email request object to JSON
+        string messageBody = JsonConvert.SerializeObject(emailForm);
+        // Create a Service Bus message
+        ServiceBusMessage message = new ServiceBusMessage(messageBody);
+
+        // Send the message to the queue
+        await sender.SendMessageAsync(message);
+
+        emailForm = new EmailRequest();
+    }
+    public void AddAllSubs()
+    {
+        emailForm.To ??= new List<string>();
+
+        foreach (var subscriber in subscribers)
+        {
+            emailForm.To.Add(subscriber.Email);
+        }
+
+        ToEmailsString = string.Join(", ", emailForm.To);
+    }
+    public void AddBody()
+    {
+        // Lägg till det önskade HTML-snippetet till htmlBody
+        emailForm.PlainText = "Nyhetsbrev";
+        emailForm.Subject = "Welcome subscriber";
+        emailForm.HtmlBody = @"
+        <!DOCTYPE html>
+        <html lang='sv-se'>
+        <head>
+            <meta chartset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Nyhetsbrev</title>
+        </head>
+        <body>
+            <div style='color: #191919; max-width: 500px'>
+                <div style='background-color: #4F85F6; color: white; text-align: center; padding: 20px 0;'>
+                    <h1 style='font-weight: 400;'>Nyhetsbrev</h1>
+                </div>
+                <div style='background-color: #f4f4f4; padding: 1rem 2rem;'>
+                    <p>Dear Subscirber</p>
+
+                </div>
+                <div style='background-color: #f4f4f4; padding: 1rem 2rem;'>
+                    <p>Lorem100</p>
+
+                </div>
+                <div style='color: #191919; text-align: center; font-size: 11px'>
+                    <p>Silicon, Sveavägen 1, SE-123 45 Stockholm, Sweden</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    ";
+    }
+
+
+}
 <h3>Subscribers</h3>
-
-
 
 @if (subscribers == null)
 {
@@ -20,76 +120,134 @@ else if (!subscribers.Any())
 }
 else
 {
-    <ul>
+    <ul class="subscriber-list">
         @foreach (var subscriber in subscribers)
         {
-            <li>@subscriber.Email</li>
+            <li class="subscriber-item">
+                <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add to To</button>
+                <span>@subscriber.Email</span>
+            </li>
         }
     </ul>
+    <div class="form-group">
+        <button class="btn btn-secondary" @onclick="AddBody">Add custom mail</button>
+        
+    </div>
+    <class class="form-group">
+        <button @onclick="AddAllSubs" class="btn-add-all-subs">Add All Subscribers</button>
+    </class>
 }
 
 <h3>Send Email</h3>
-<button @onclick="SendEmail">Send email</button>
-@* <EditForm FormName="EmailForm" Model="EmailForm" OnValidSubmit="SendEmail" method="post">
+@* <button @onclick="SendEmail">Send email</button> *@
+
+<EditForm FormName="EmailForm" Model="emailForm" OnValidSubmit="SendEmail" method="post" class="email-form">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div>
-        <label>To Email:</label>
-        <InputText @bind-Value="EmailForm.To" />
+    <div class="form-group">
+        <label for="to-email">To Email:</label>
+        <InputTextArea id="to-email" @bind-Value="ToEmailsString" class="form-control" />
     </div>
-    <div>
-        <label>Subject:</label>
-        <InputText @bind-Value="EmailForm.Subject" />
+    <div class="form-group">
+        <label for="subject">Subject:</label>
+        <InputText id="subject" @bind-Value="emailForm.Subject" class="form-control" />
     </div>
-    <div>
-        <label>HTML Body:</label>
-        <InputTextArea @bind-Value="EmailForm.HtmlBody" />
+    <div class="form-group">
+        <label for="html-body">HTML Body:</label>
+        <InputTextArea id="html-body" @bind-Value="emailForm.HtmlBody" class="form-control" />
     </div>
-    <div>
-        <label>Plain Text Body:</label>
-        <InputTextArea @bind-Value="EmailForm.PlainText" />
+    <div class="form-group">
+        <label for="plain-text-body">Plain Text Body:</label>
+        <InputTextArea id="plain-text-body" @bind-Value="emailForm.PlainText" class="form-control" />
     </div>
 
     <button class="btn btn-secondary" type="submit">Send Email</button>
 
     <p>@responseFromProvider</p>
-</EditForm> *@
+</EditForm>
 
-
-@code {
-    private string responseFromProvider = "";
-
-    private List<SubscribersEntity> subscribers;
-
-    [SupplyParameterFromForm]
-    public EmailRequest EmailForm { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        subscribers = await UserService.GetAllSubscribersAsync();
+<style>
+    .subscriber-list {
+        list-style-type: none;
+        padding: 0;
     }
 
-    public async Task SendEmail()
-    {
-        var requestUrl = "https://multipleemailprovider.azurewebsites.net";
-        var result = new EmailRequest
-        {
-            To = "staranderh@gmail.com",
-            Subject = "Provar från app",
-            HtmlBody = "Provar från app",
-            PlainText = "Provar från app"
-        };
-        var response = await HttpClient.PostAsJsonAsync(requestUrl, result);
-        
-
-        if (response.IsSuccessStatusCode)
-        {
-            responseFromProvider = "Email sent successfully";
-        }
-        else
-        {
-            responseFromProvider = "Something went wrong";
-        }
+    .subscriber-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
     }
-}
+
+    .btn-add-to {
+        margin-right: 20px;
+        padding: 5px 10px;
+        font-size: 14px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+        .btn-add-to:hover {
+            background-color: #0056b3;
+        }
+
+    .email-form {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    .btn-add-all-subs {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+        .btn-add-all-subs:hover {
+            background-color: #0056b3;
+        }
+    .btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+    }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+</style>
+
+
+
+
