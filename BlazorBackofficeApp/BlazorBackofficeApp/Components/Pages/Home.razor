@@ -17,19 +17,23 @@
 @code {
 
 
-
+    List<UserWithRoles> userListWithRoles;
     string resultDelete = "";
     string resultUpdate = "";
     List<ApplicationUser> userList;
-
+    
     protected override async Task OnInitializedAsync()
     {
         var user = await DbContext.Users.ToListAsync();
 
         await LoadUsers();
         user = userList;
-
+        await LoadUsersWithRoles();
         
+    }
+    private async Task LoadUsersWithRoles()
+    {
+        userListWithRoles = await UserService.GetAllUsersWithRolesAsync();
     }
 
     private async Task DeleteUser(string userId)
@@ -49,6 +53,7 @@
     private async Task LoadUsers()
     {
         userList = await DbContext.Users.ToListAsync();
+        
     }
 
     private async Task UpdateUserRole(string userId)
@@ -103,14 +108,23 @@
 
             <p>Users:</p>
             <div class="user-container">
-                @foreach (var user in userList)
+                @foreach (var userWithRoles in userListWithRoles)
                 {
                     <div class="user-card">
-                        <div><strong>@user.FirstName @user.LastName</strong></div>
-                        <div>Email: @user.Email</div>
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(user.Id)">Remove</button>
+                        <div><strong>@userWithRoles.User.FirstName @userWithRoles.User.LastName</strong></div>
+                        <div>Email: @userWithRoles.User.Email</div>
+                        @if (userWithRoles.Roles.Contains("ADMIN"))
+                        {
+                            <div>Role: Admin</div>
+                        }
+                        else
+                        {
+                            <div>Role: Member</div>
+                        }
+                        
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
                         <button class="btn btn-success">Edit</button>
-                        <button class="btn btn-success" @onclick="() => ShowUpdateConfirmation(user.Id)">Make Admin</button>
+                        <button class="btn btn-success" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
                         <p>@resultDelete</p>
                     </div>
                 }

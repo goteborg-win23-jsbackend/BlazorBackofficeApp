@@ -1,5 +1,6 @@
 ﻿using BlazorBackofficeApp.Data;
 using BlazorBackofficeApp.Data.Entities;
+using BlazorBackofficeApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,6 +65,23 @@ public class UserService(ApplicationDbContext context, UserManager<ApplicationUs
         {
             return false;
         }
+    }
+    public async Task<List<UserWithRoles>> GetAllUsersWithRolesAsync()
+    {
+        var users = await _userManager.Users.ToListAsync();
+        var userWithRolesList = new List<UserWithRoles>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            userWithRolesList.Add(new UserWithRoles
+            {
+                User = user,
+                Roles = roles.ToList()
+            });
+        }
+
+        return userWithRolesList;
     }
 
     //var user = await _userManager.GetUserAsync(User);

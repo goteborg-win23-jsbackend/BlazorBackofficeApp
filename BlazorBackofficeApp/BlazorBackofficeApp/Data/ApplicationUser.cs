@@ -1,3 +1,4 @@
+using BlazorBackofficeApp.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace BlazorBackofficeApp.Data
