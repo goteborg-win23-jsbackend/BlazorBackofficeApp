@@ -3,6 +3,7 @@
 @using BlazorBackofficeApp.Data
 @using BlazorBackofficeApp.Models
 @using BlazorBackofficeApp.Services
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext DbContext
@@ -10,6 +11,7 @@
 @inject RoleManager<IdentityRole> RoleManager
 @inject UserManager<ApplicationUser> UserMananger
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <PageTitle>Users</PageTitle>
 @code {

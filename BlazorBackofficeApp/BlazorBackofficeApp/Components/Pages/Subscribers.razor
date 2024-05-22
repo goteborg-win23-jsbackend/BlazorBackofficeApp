@@ -4,11 +4,14 @@
 @using BlazorBackofficeApp.Services
 @using System.Text.Json.Serialization
 @using Azure.Messaging.ServiceBus;
+@using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json;
 @inject UserService UserService
 @inject HttpClient HttpClient
 @rendermode InteractiveServer
 @inject IConfiguration Configuration
+@attribute [Authorize]
+
 @code {
     private string responseSubDelete = "";
     private List<SubscribersEntity> subscribers = new List<SubscribersEntity>();
@@ -182,7 +185,7 @@ else
     </div>
     <div class="form-group">
         <label for="html-body">HTML Body:</label>
-        <InputTextArea id="html-body" @bind-Value="emailForm.HtmlBody" class="form-control" />
+        <InputTextArea id="html-body" @bind-Value="emailForm.HtmlBody" class="form-control" rows="10" cols="50" />
     </div>
     <div class="form-group">
         <label for="plain-text-body">Plain Text Body:</label>
