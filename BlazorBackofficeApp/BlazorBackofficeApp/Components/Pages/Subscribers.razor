@@ -151,8 +151,8 @@ else
         @foreach (var subscriber in subscribers)
         {
             <li class="subscriber-item">
-                <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add</button>
-                <button @onclick="@(() => DeleteSubscriber(subscriber.Email))" class="btn-delete">Delete</button>
+                <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add Subscriber to Form</button>
+                <button @onclick="@(() => DeleteSubscriber(subscriber.Email))" class="btn-delete">Delete subscriber</button>
                 
                 <span>@subscriber.Email</span>
             </li>
@@ -201,12 +201,14 @@ else
     .subscriber-list {
         list-style-type: none;
         padding: 0;
+        border-bottom: 1px solid gray;
     }
 
     .subscriber-item {
         display: flex;
         align-items: center;
         margin-bottom: 10px;
+        
     }
 
     .btn-add-to {
