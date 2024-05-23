@@ -6,6 +6,8 @@
 @using Azure.Messaging.ServiceBus;
 @using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json;
+
+
 @inject UserService UserService
 @inject HttpClient HttpClient
 @rendermode InteractiveServer
@@ -13,16 +15,25 @@
 @attribute [Authorize]
 
 @code {
-    private string responseSubDelete = "";
-    private List<SubscribersEntity> subscribers = new List<SubscribersEntity>();
+    private string emailToDelete = "";
+    public SubscibersModel subscriberToUpdate = new SubscibersModel();
+    private bool responseActive = false;
+    private bool optionActive = false;
+    private bool confirmation = false;
+    private bool showForm = false;
+    private bool showNewsletter = false;
+    private string responseInfo = "";
+    private List<SubscibersModel> subscribers = new List<SubscibersModel>();
     private string ServiceBusConnectionString = "";
     private string responseFromProvider = "";
     private string QueueName = "email_request";
     private EmailRequest emailForm = new EmailRequest();
+
+
     protected override async Task OnInitializedAsync()
 
     {
-        subscribers = await UserService.GetAllSubscribersAsync();
+        subscribers = await UserService.GetAllUsersAsync();
 
         ServiceBusConnectionString = Configuration["ServiceBusConnection"]!;
         if (string.IsNullOrEmpty(ServiceBusConnectionString))
@@ -30,8 +41,6 @@
             responseFromProvider = "ServiceBusConnection is not set.";
         }
     }
-
-
 
     private string ToEmailsString
     {
@@ -41,7 +50,6 @@
             emailForm.To = value?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
         }
     }
-
     private void AddToEmail(string email)
     {
         emailForm.To ??= new List<string>();
@@ -50,20 +58,51 @@
     }
     public async Task SendEmail()
     {
-        // Create a Service Bus client
-        ServiceBusClient client = new ServiceBusClient(ServiceBusConnectionString);
-        // Create a sender for the queue
-        ServiceBusSender sender = client.CreateSender(QueueName);
+        try
+        {
 
-        // Serialize the email request object to JSON
-        string messageBody = JsonConvert.SerializeObject(emailForm);
-        // Create a Service Bus message
-        ServiceBusMessage message = new ServiceBusMessage(messageBody);
+            if (emailForm.To == null || !emailForm.To.Any())
+            {
+                responseFromProvider = "To field is required.";
+                return;
+            }
+            if (string.IsNullOrEmpty(emailForm.Subject))
+            {
+                responseFromProvider = "Subject is required.";
+                return;
+            }
+            if (string.IsNullOrEmpty(emailForm.HtmlBody) && string.IsNullOrEmpty(emailForm.PlainText))
+            {
+                responseFromProvider = "Either HTML Body or Plain Text Body is required.";
+                return;
+            }
 
-        // Send the message to the queue
-        await sender.SendMessageAsync(message);
 
-        emailForm = new EmailRequest();
+            await using (var client = new ServiceBusClient(ServiceBusConnectionString))
+            {
+                var sender = client.CreateSender(QueueName);
+
+
+                string messageBody = JsonConvert.SerializeObject(emailForm);
+
+
+                var message = new ServiceBusMessage(messageBody);
+
+
+                await sender.SendMessageAsync(message);
+
+
+                emailForm = new EmailRequest();
+                responseInfo = "Email sent successfully.";
+                responseActive = true;
+
+            }
+        }
+        catch (Exception ex)
+        {
+    
+            responseFromProvider = $"An error occurred: {ex.Message}";
+        }
     }
     public void AddAllSubs()
     {
@@ -75,28 +114,6 @@
         }
 
         ToEmailsString = string.Join(", ", emailForm.To);
-    }
-    public async Task DeleteSubscriber(string email)
-    {
-        try
-        {
-            var emailObject = new EmailObject { Email = email };
-            var response = await HttpClient.PostAsJsonAsync("https://newsletterprovider-silicon-cl.azurewebsites.net/api/Unsubscribe?code=bSWxf0Zb8QqeQRM0TVMybkHt5y5HgypnbwdEfNKXKP_XAzFu7F3Lzg%3D%3D", emailObject);
-          
-
-            if (response.IsSuccessStatusCode)
-            {
-                responseSubDelete = "Subscriber was deleted successfully";
-            }
-            else
-            {
-                responseSubDelete = "Something went wrong";
-            }
-        }
-        catch (Exception ex)
-        {
-            
-        }
     }
     public void AddBody()
     {
@@ -132,9 +149,71 @@
         </html>
     ";
     }
+    public async Task DeletedSubsciber(string mail)
+    {
+        var result = await UserService.DeleteSubscriber(mail);
+        if (result)
+        {
+            responseInfo = "Subscriber was deleted";
+            responseActive = true;
+            confirmation = false;
+        }
+        else
+        {
+            responseInfo = "Something went wrong";
+            responseActive = true;
+            confirmation = false;
+        }
 
+    }
+    public void ShowOption(string mail)
+    {
 
+        confirmation = true;
+        emailToDelete = mail;
+    }
+    public void OptionDown()
+    {
+        confirmation = false;
+    }
+    public void ShowUpdateOption(SubscibersModel model)
+    {
+        showNewsletter = true;
+        subscriberToUpdate = model;
+    }
+    public void CloseSubOptions()
+    {
+        showNewsletter = false;
+    }
+    public async Task UpdateSubscriber(SubscibersModel model)
+    {
+
+        var subscriberObject = new SubscibersModel
+            {
+                Email = model.Email,
+                DailyNewsletter = model.DailyNewsletter,
+                AdvertisingUpdates = model.AdvertisingUpdates,
+                WeekinReview = model.WeekinReview,
+                EventUpdates = model.EventUpdates,
+                StartupsWeekly = model.StartupsWeekly,
+                Podcasts = model.Podcasts
+            };
+        var response = await HttpClient.PutAsJsonAsync("https://newsletterprovider-silicon-cl.azurewebsites.net/api/UpdateSubscriber?code=lWH2V6mHjVOveXSlNWdD4wEjh0r86cPB8q9clXo3ylcmAzFu4B_ABw%3D%3D", subscriberObject);
+        @if (response.IsSuccessStatusCode)
+        {
+            showNewsletter = false;
+            responseActive = true;
+            responseInfo = "Subscribers was updated successfully";
+        }
+        else
+        {
+            responseActive = true;
+            responseInfo = "Something went wrong";
+        }
+    }
 }
+
+
 <h3>Subscribers</h3>
 
 @if (subscribers == null)
@@ -151,14 +230,87 @@ else
         @foreach (var subscriber in subscribers)
         {
             <li class="subscriber-item">
-                <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add Subscriber to Form</button>
-                <button @onclick="@(() => DeleteSubscriber(subscriber.Email))" class="btn-delete">Delete subscriber</button>
-                
+                <div>
+                    <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add Subscriber to Form</button>
+                </div>
+                <div>
+                    <button @onclick="@(() => ShowOption(subscriber.Email))" class="btn-delete">Delete subscriber</button>
+                </div>
+                <div>
+                    <button @onclick="@(() => ShowUpdateOption(subscriber))" class="btn-update">Update subscriber</button>
+                </div>
                 <span>@subscriber.Email</span>
             </li>
         }
-        @responseSubDelete
+ 
     </ul>
+    @if (confirmation)
+    {
+        <div class="confirmation">
+            <div>
+                <p>Are you sure?</p>
+                <button @onclick="@(() => DeletedSubsciber(emailToDelete))" class="btn-add-all-subs">Yes</button>
+                <button @onclick="OptionDown" class="btn-add-all-subs">No</button>
+            </div>
+
+        </div>
+    }
+    @if (showNewsletter)
+    {
+        <section id="newsletter" class="newsletter">
+            <div class="swish">
+                <div class="title">
+                    
+                    
+                </div>
+                <EditForm Model="subscriberToUpdate" OnValidSubmit="() => UpdateSubscriber(subscriberToUpdate)">
+                    <DataAnnotationsValidator />
+                    <div class="signup">
+                        <h5>Sign up for Newsletters</h5>
+                        <div class="checkbox">
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.DailyNewsletter" />
+                                <label>Daily Newsletter</label>
+                            </div>
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.EventUpdates" />
+                                <label>Event Updates</label>
+                            </div>
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.AdvertisingUpdates" />
+                                <label>Advertising Updates</label>
+                            </div>
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.StartupsWeekly" />
+                                <label>Startups Weekly</label>
+                            </div>
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.WeekinReview" />
+                                <label>Week in Review</label>
+                            </div>
+                            <div class="box">
+                                <InputCheckbox @bind-Value="subscriberToUpdate.Podcasts" />
+                                <label>Podcasts</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-field">
+                        <i class="fa-regular fa-envelope"></i>
+                        <InputText type="email" @bind-Value="subscriberToUpdate.Email" class="field" placeholder="Enter your email" />
+                        <button class="btn-theme" type="submit">Update Subscriber</button>
+                        <button @onclick="CloseSubOptions" class="btn-theme">Cancel</button>
+                    </div>
+                    <ValidationMessage For="@(() => subscriberToUpdate.Email)" />
+                    @if (responseActive)
+                    {
+                        <p>@responseInfo</p>
+                    }
+                    
+                </EditForm>
+            </div>
+        </section>
+    }
+   
     <div class="form-group">
         <button class="btn btn-secondary" @onclick="AddBody">Add custom mail</button>
         
@@ -166,10 +318,15 @@ else
     <class class="form-group">
         <button @onclick="AddAllSubs" class="btn-add-all-subs">Add All Subscribers</button>
     </class>
+    
+    @if (responseActive)
+    {
+        <div class="info-user">@responseInfo</div>
+    }
 }
 
 <h3>Send Email</h3>
-@* <button @onclick="SendEmail">Send email</button> *@
+
 
 <EditForm FormName="EmailForm" Model="emailForm" OnValidSubmit="SendEmail" method="post" class="email-form">
     <DataAnnotationsValidator />
@@ -196,12 +353,12 @@ else
 
     <p>@responseFromProvider</p>
 </EditForm>
-
+ 
 <style>
     .subscriber-list {
         list-style-type: none;
         padding: 0;
-        border-bottom: 1px solid gray;
+        
     }
 
     .subscriber-item {
@@ -211,6 +368,9 @@ else
         
     }
 
+    .newsletter{
+        margin-bottom:30px;
+    }
     .btn-add-to {
         margin-right: 2px;
         padding: 5px 10px;
@@ -227,7 +387,16 @@ else
         }
 
     
-
+    .info-user {
+        background-color: #d4edda; 
+        color: #0f5132;
+        padding: 10px; 
+        border: 1px solid #c3e6cb;
+        border-radius: 5px; 
+        font-size: 16px; 
+        margin-top:10px;
+        margin-bottom: 10px;
+    }
     .btn-delete {
         margin-right: 20px;
         padding: 5px 10px;
@@ -246,6 +415,8 @@ else
         display: flex;
         flex-direction: column;
         align-items: flex-start;
+        margin-top:30px;
+        padding-top:30px;
     }
 
     .form-group {
