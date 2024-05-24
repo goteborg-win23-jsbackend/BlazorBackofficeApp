@@ -6,30 +6,39 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
 @inject ApplicationDbContext DbContext
 @inject UserService UserService
 @inject RoleManager<IdentityRole> RoleManager
 @inject UserManager<ApplicationUser> UserMananger
+
+
 @rendermode InteractiveServer
 @attribute [Authorize]
 
 <PageTitle>Users</PageTitle>
 @code {
 
+    BasicInfoForm basicInfoForm = new BasicInfoForm();
 
+    ApplicationUser infoFromSelectedUser = new ApplicationUser();
+    bool statusMessage = false;
+    string updateSelectedId = "";
     List<UserWithRoles> userListWithRoles;
     string resultDelete = "";
     string resultUpdate = "";
     List<ApplicationUser> userList;
-    
+    bool ShowUserForm = false;
+
     protected override async Task OnInitializedAsync()
     {
+
         var user = await DbContext.Users.ToListAsync();
 
         await LoadUsers();
         user = userList;
         await LoadUsersWithRoles();
-        
+
     }
     private async Task LoadUsersWithRoles()
     {
@@ -53,7 +62,7 @@
     private async Task LoadUsers()
     {
         userList = await DbContext.Users.ToListAsync();
-        
+
     }
 
     private async Task UpdateUserRole(string userId)
@@ -70,7 +79,7 @@
             resultUpdate = "Error updating user.";
         }
     }
-    
+
     bool showDeleteConfirmation = false;
     bool showUpdateConfirmation = false;
     string selectedUserId = "";
@@ -96,12 +105,142 @@
     {
         showUpdateConfirmation = false;
     }
+    private void ShowUpdateForm(ApplicationUser user)
+    {
+
+        ShowUserForm = true;
+        infoFromSelectedUser = user;
+
+        // Kopiera data från den valda användaren till basicInfoForm
+        basicInfoForm.Id = user.Id;
+        basicInfoForm.FirstName = user.FirstName!;
+        basicInfoForm.LastName = user.LastName!;
+        basicInfoForm.Email = user.Email!;
+        basicInfoForm.PhoneNumber = user.PhoneNumber!;
+        basicInfoForm.Biography = user.Biography!;
+
+    }
+    private async Task UpdateForm()
+    {
+        if (basicInfoForm != null)
+        {
+            var specificUser = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == basicInfoForm.Id);
+
+            if (specificUser != null)
+            {
+
+                specificUser.FirstName = basicInfoForm.FirstName;
+                specificUser.LastName = basicInfoForm.LastName;
+                specificUser.PhoneNumber = basicInfoForm.PhoneNumber;
+                specificUser.Email = basicInfoForm.Email;
+                specificUser.Biography = basicInfoForm.Biography;
+
+                var result = await UserMananger.UpdateAsync(specificUser);
+
+                if (result.Succeeded)
+                {
+                    statusMessage = true;
+                    await LoadUsers(); // Ladda om användarlistan efter uppdatering
+                    ShowUserForm = false; // Stäng formuläret efter uppdatering
+                }
+                else
+                {
+                    statusMessage = false;
+                }
+            }
+        }
+    }
+    public void CancelForm()
+    {
+        ShowUserForm = false;
+    }
+
+    public class BasicInfoForm
+    {
+        public string Id { get; set; } = null!;
+
+        [DataType(DataType.Text)]
+        [Display(Name = "First name", Prompt = " Enter your first name", Order = 0)]
+        public string FirstName { get; set; } = null!;
+
+        [DataType(DataType.Text)]
+        [Display(Name = "Last name", Prompt = " Enter your last name", Order = 1)]
+        public string LastName { get; set; } = null!;
+
+        [DataType(DataType.EmailAddress)]
+        [Display(Name = "Email-address", Prompt = " Enter your email-address", Order = 2)]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = null!;
+
+        [DataType(DataType.PhoneNumber)]
+        [Display(Name = "Phone Number", Order = 3)]
+        public string PhoneNumber { get; set; } = null!;
+
+        [DataType(DataType.Text)]
+        [Display(Name = "Biography", Order = 4)]
+        public string Biography { get; set; } = null!;
+
+    };
 }
+
 <PageTitle>Users</PageTitle>
 
 
-<AuthorizeView>
-    <Authorized>
+
+      @if (ShowUserForm)
+{
+    <div class="user-form">
+        <h2>Account Details</h2>
+        <h5>Basic Info</h5>
+        <EditForm Model="@basicInfoForm" OnValidSubmit="UpdateForm" method="post" novalidate>
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="firstName">First name</label>
+                <InputText id="firstName" @bind-Value="basicInfoForm.FirstName" class="form-control" />
+                <ValidationMessage For="@(() => basicInfoForm.FirstName)" />
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last name</label>
+                <InputText id="lastName" @bind-Value="basicInfoForm.LastName" class="form-control" />
+                <ValidationMessage For="@(() => basicInfoForm.LastName)" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <InputText id="email" @bind-Value="basicInfoForm.Email" class="form-control" />
+                <ValidationMessage For="@(() => basicInfoForm.Email)" />
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Phone</label>
+                <InputText id="phoneNumber" @bind-Value="basicInfoForm.PhoneNumber" class="form-control" />
+                <ValidationMessage For="@(() => basicInfoForm.PhoneNumber)" />
+            </div>
+
+            <div class="form-group">
+                <label for="biography">Biography</label>
+                <InputTextArea id="biography" @bind-Value="basicInfoForm.Biography" rows="4" class="form-control"></InputTextArea>
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-primary" @onclick="CancelForm">Cancel Form</button>
+                <button class="btn btn-primary" type="submit">Save changes</button>
+            </div>
+        </EditForm>
+        
+    </div>
+}
+
+
+        @if (statusMessage)
+        {
+            <div class="info-user">User was updated successfully</div>
+        }
+     
+        
+
         @if (userList != null && userList.Any())
         {
             <h1>Web Application Blazor: User Service</h1>
@@ -113,6 +252,9 @@
                     <div class="user-card">
                         <div><strong>@userWithRoles.User.FirstName @userWithRoles.User.LastName</strong></div>
                         <div>Email: @userWithRoles.User.Email</div>
+                        <div>Phone: @userWithRoles.User.PhoneNumber</div>
+                        <div>Bio: @userWithRoles.User.Biography</div>
+                        <div>Email Confirmed?: @userWithRoles.User.EmailConfirmed</div>
                         @if (userWithRoles.Roles.Contains("ADMIN"))
                         {
                             <div>Role: Admin</div>
@@ -123,7 +265,8 @@
                         }
 
                         <button class="btn-mine" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
-                        <button class="btn-mine">Edit</button>
+                        <button class="btn-mine" @onclick="() => ShowUpdateForm(userWithRoles.User)">Update</button>
+                       
                         <button class="btn-mine" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
                         <p>@resultDelete</p>
                     </div>
@@ -171,31 +314,28 @@
 
         <AntiforgeryToken />
 
-    </Authorized>
-    <NotAuthorized>
-        <h1>Welcome Admin</h1>
-
-        <p>Login to access your services</p>
-    </NotAuthorized>
-</AuthorizeView>
-
+ 
+    
 
 
 <style>
-    .user-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
+   .user-container {
+    display: flex;
+    flex-wrap: wrap;
+    
+    gap: 20px;
+}
 
     .user-card {
         background-color: #f8f9fa;
         border: 1px solid #ced4da;
         border-radius: 5px;
         padding: 10px;
-        margin-bottom: 10px;
         width: calc(33.3333% - 20px);
         box-sizing: border-box;
     }
+
+    
+
 
 </style>
