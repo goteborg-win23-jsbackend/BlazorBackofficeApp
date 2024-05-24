@@ -12,7 +12,7 @@ namespace BlazorBackofficeApp.Data
 
         public string? AddressId { get; set; }
 
-        
+        public string? Biography { get; set; }
     }
 
 }
