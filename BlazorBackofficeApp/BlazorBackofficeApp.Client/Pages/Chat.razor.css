@@ -1,28 +1,35 @@
-﻿.chat-bubble-right {
+﻿.chat-bubble-mama {
     text-align: right;
-    background-color: beige;
-    margin-right: auto;
-    border-radius: 15px;
-    padding: 10px;
-    max-width: 75%;
-    border: 1px solid black;
-}
-
-.chat-bubble-left {
-    text-align: left;
-    background-color: #CCFFCC;
     margin-left: auto;
     border-radius: 15px;
     padding: 10px;
     max-width: 75%;
-    border: 1px solid black;
+    background: #6366F1;
 }
 
-.list-group-items{
-    list-style-type:none;
-
-}
-
-.List-group{
+.chat-bubble-papa {
+    text-align: left;
+    border:1px solid gray;
+    margin-right: auto;
+    border-radius: 15px;
+    padding: 10px;
+    max-width: 75%;
     
+}
+
+.list-group-items {
+    list-style-type: none;
+}
+
+.List-group {
+}
+.btn-mine {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 30px;
 }

@@ -45,10 +45,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 builder.Services.AddSignalR();
 
-
-
-
-
+builder.Services.AddSignalR();
 
 
 var app = builder.Build();

@@ -121,10 +121,10 @@
                         {
                             <div>Role: Member</div>
                         }
-                        
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
-                        <button class="btn btn-success">Edit</button>
-                        <button class="btn btn-success" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
+
+                        <button class="btn-mine" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
+                        <button class="btn-mine">Edit</button>
+                        <button class="btn-mine" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
                         <p>@resultDelete</p>
                     </div>
                 }
@@ -178,7 +178,6 @@
         <p>Login to access your services</p>
     </NotAuthorized>
 </AuthorizeView>
-
 
 
 
