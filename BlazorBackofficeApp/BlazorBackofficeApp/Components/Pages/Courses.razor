@@ -1,11 +1,457 @@
 ﻿@page "/courses"
+@using BlazorBackofficeApp.Models
 @using Microsoft.AspNetCore.Authorization
+@using System.Text.Json
+@inject HttpClient Http
+@rendermode InteractiveServer
 @attribute [Authorize]
-<h3>Courses</h3>
 
-<div>
-    <button class="btn btn-primary">Create Course</button>
-</div>
+<section id="courses">
+    <div class="container">
+        <button class="btn-delete" @onclick="ShowCreateForm">Create new course</button>
+
+        @if (showCreateForm)
+        {
+            <div class="create-course-form">
+                <h2>Create New Course</h2>
+                <EditForm Model="newCourse" OnValidSubmit="CreateNewCourse">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <InputText id="title" class="form-control" @bind-Value="newCourse.Title" />
+                    </div>
+                    <button type="submit" class="btn-create">Create Course</button>
+                </EditForm>
+            </div>
+        }
+
+        <div class="title-input-field">
+            <h1>Courses</h1>
+        </div>
+        <div class="articles">
+            @if (courses != null)
+            {
+                @foreach (var course in courses)
+                {
+                    <div class="course-card">
+                        <div class="course-content">
+                            <h5>@course.Title</h5>
+                            <p>@course.Id</p>
+
+                            <div class="buttons">
+                                <button class="btn-update" @onclick="async () => await UpdateCourse(course.Id)">Update</button>
+                                <button class="btn-delete" @onclick="async () => await DeleteCourse(course.Id)">Delete</button>
+
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        @if (isCourseDeletedSuccessfully)
+        {
+            <div class="warning-message">
+                Course successfully deleted
+            </div>
+            
+        }
+
+
+      
+
+    </div>
+
+
+  
+
+</section>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .title-input-field {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .articles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .course-card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        width: calc(33.333% - 20px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .course-content {
+        text-align: center;
+    }
+
+        .course-content h5 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .course-content p {
+            font-size: 1em;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+    .buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .create-course-form {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        max-width: 500px;
+        margin: 20px auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+        .create-course-form h2 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .btn-create {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+
+        .btn-create:hover {
+            background-color: #0056b3;
+        }
+    .btn-update, .btn-delete {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-update {
+        background-color: #28a745;
+        color: white;
+    }
+
+        .btn-update:hover {
+            background-color: #218838;
+        }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+
+</style>
+
 @code {
 
+    private bool isCourseDeletedSuccessfully = false;
+    private List<CourseCardModel>? courses;
+    private List<Course>? oneCourse;
+    private bool showCreateForm = false;
+    private CourseCreateRequest newCourse = new CourseCreateRequest();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var query = new
+        {
+            query = "{ getAllCourses { id title } }"
+        };
+
+        var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
+        var jsonString = await response.Content.ReadAsStringAsync();
+        var jsonResponse = JsonDocument.Parse(jsonString);
+
+        courses = JsonSerializer.Deserialize<List<CourseCardModel>>(
+            jsonResponse.RootElement.GetProperty("data").GetProperty("getAllCourses").ToString(),
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+    }
+
+
+    private async Task<bool> DeleteCourse(string courseId)
+    {
+
+        try
+        {
+            var query = new
+            {
+                query = $"mutation {{ deleteCourse(id: \"{courseId}\") }}",
+
+            };
+
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isCourseDeletedSuccessfully = true;
+          
+                await OnInitializedAsync();
+                StateHasChanged();
+                return true;
+            }
+            else
+            {
+                isCourseDeletedSuccessfully = false;
+             
+                await OnInitializedAsync();
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+
+
+            isCourseDeletedSuccessfully = false;
+           
+            await OnInitializedAsync();
+            return false;
+        }
+    }
+
+    private async Task CreateNewCourse()
+    {
+        bool isCreated = await CreateCourse(newCourse);
+        if (isCreated)
+        {
+            showCreateForm = false;
+            await OnInitializedAsync(); 
+        }
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+    }
+    private async Task<bool> CreateCourse(CourseCreateRequest input)
+    {
+        try
+        {
+            var requestBody = new
+            {
+                query = "mutation ($input: CourseCreateRequestInput!) { createCourse(input: $input) { id title } }",
+                variables = new
+                {
+                    input = new
+                    {
+                        imageUri = "https://jsbackendwin23ec.blob.core.windows.net/courseimages/article-1.svg",
+                        imageHeaderUri = "https://jsbackendwin23ec.blob.core.windows.net/courseimages/single_course_background.svg",
+                        isBestSeller = true,
+                        isDigital = true,
+                        categories = new[] { "Fullstack", "Web", "Developer", "HTML", "CSS", "JavaScript" },
+                        title = input.Title,
+                        ingress = "Learn how to build fullstack web applications from scratch.",
+                        starRating = 4,
+                        reviews = "1.4K",
+                        likesInPercent = "94%",
+                        likes = "5K",
+                        hours = "148",
+                        authors = new[]
+                        {
+                        new { name = "Robert Fox" }
+                    },
+                        prices = new
+                        {
+                            currency = "USD",
+                            price = 12.50,
+                            discount = 0
+                        },
+                        content = new
+                        {
+                            description = "<p>This is a course that will teach you everything you need to know to start creating fullstack web applications from scratch all by yourself.",
+                            includes = new[]
+                            {
+                            "148 hours on-demand video",
+                            "10 articles",
+                            "25 downloadable resources",
+                            "Full lifetime access",
+                            "Certificate of completion"
+                        },
+                            programDetails = new[]
+                            {
+                            new { id = 1, title = "Introduction. Getting Started", description = "Learn the basics and get started with your first projects." },
+                            new { id = 2, title = "The Ultimate HTML developer: advanced HTML", description = "Explore advanced HTML techniques and build complex webpages" },
+                            new { id = 3, title = "CSS & CSS3: basic", description = "Basic and advanced use of CSS to design web pages." },
+                            new { id = 4, title = "Understanding APIs", description = "Understand and integrate various APIs into your projects" },
+                            new { id = 5, title = "Python from beginner to advanced", description = "A deep dive into Python programming, from beginner to advanced level." }
+                        }
+                        }
+                    }
+                }
+            };
+
+
+
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", requestBody);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            return false;
+        }
+    }
+
+    private async Task<Course> GetOneCourse(string courseId)
+    {
+        try
+        {
+            var query = new
+            {
+                query = $"query {{ getCourseById(id: \"{courseId}\") {{ id title }} }}"
+            };
+
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var jsonResponse = JsonDocument.Parse(jsonString);
+
+                // Extrahera kursdata från JSON-svaret
+                var courseData = jsonResponse.RootElement.GetProperty("data").GetProperty("getCourseById");
+
+                // Skapa en ny instans av Course och sätt värdena från GraphQL-svaret
+                var course = new Course
+                    {
+                        Id = courseData.GetProperty("id").GetString(),
+                        Title = courseData.GetProperty("title").GetString(),
+                        // Fyll i resten av egenskaperna beroende på din Course-modell
+                    };
+
+                return course;
+            }
+            else
+            {
+                // Om förfrågan misslyckas, kasta ett undantag eller hantera felet på lämpligt sätt
+                throw new Exception("Failed to retrieve course data.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Hantera eventuella fel här
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            return null;
+        }
+    }
+
+
+
+    private async Task<bool> UpdateCourse(string courseId)
+    {
+        try
+        {
+
+            var existingCourse = await GetOneCourse(courseId);
+
+            var courseUpdated = new CourseCardModel
+                {
+                    Title = "Apa",
+
+                };
+
+            if (existingCourse != null)
+            {
+         
+                existingCourse.Title = courseUpdated.Title;
+                
+
+                var requestBody = new
+                {
+                    query = $"mutation ($input: CourseUpdateRequestInput!) {{ updateCourse(input: $input) }}",
+                    variables = new
+                    {
+                        input = new
+                        {
+
+                            
+                            
+                        }
+                    }
+                };
+
+       
+                var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", requestBody);
+
+                return response.IsSuccessStatusCode;
+            }
+            else
+            {
+        
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+        
+
+            return false;
+        }
+    }
 }
+  
+
+
+   
+   
+
+
+
+   
