@@ -227,27 +227,22 @@ else
         @foreach (var subscriber in subscribers)
         {
             <li class="subscriber-item">
-                <div>
-                    <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn-add-to">Add Subscriber to Form</button>
+                <h5 class="subscriber-email">@subscriber.Email</h5>
+                <div class="button-group">
+                    <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn btn-add-to">Add Subscriber to Form</button>
+                    <button @onclick="@(() => ShowOption(subscriber.Email))" class="btn btn-delete">Delete Subscriber</button>
+                    <button @onclick="@(() => ShowUpdateOption(subscriber))" class="btn btn-update">Update Subscriber</button>
                 </div>
-                <div>
-                    <button @onclick="@(() => ShowOption(subscriber.Email))" class="btn-delete">Delete subscriber</button>
-                </div>
-                <div>
-                    <button @onclick="@(() => ShowUpdateOption(subscriber))" class="btn-update">Update subscriber</button>
-                </div>
-                <span>@subscriber.Email</span>
             </li>
         }
- 
     </ul>
     @if (confirmation)
     {
         <div class="confirmation">
             <div>
                 <p>Are you sure?</p>
-                <button @onclick="@(() => DeletedSubsciber(emailToDelete))" class="btn-add-all-subs">Yes</button>
-                <button @onclick="OptionDown" class="btn-add-all-subs">No</button>
+                <button @onclick="@(() => DeletedSubsciber(emailToDelete))" class="btn btn-add-to">Yes</button>
+                <button @onclick="OptionDown" class="btn btn-add-to">No</button>
             </div>
 
         </div>
@@ -309,12 +304,10 @@ else
     }
    
     <div class="form-group">
-        <button class="btn btn-secondary" @onclick="AddBody">Add custom mail</button>
-        
+        <button class="btn-mine" @onclick="AddBody">Add custom mail</button>
+        <button @onclick="AddAllSubs" class="btn-mine">Add All Subscribers</button>
     </div>
-    <class class="form-group">
-        <button @onclick="AddAllSubs" class="btn-add-all-subs">Add All Subscribers</button>
-    </class>
+   
     
     @if (responseActive)
     {
@@ -346,7 +339,7 @@ else
         <InputTextArea id="plain-text-body" @bind-Value="emailForm.PlainText" class="form-control" />
     </div>
 
-    <button class="btn btn-secondary" type="submit">Send Email</button>
+    <button class="btn-mine" type="submit">Send Email</button>
 
     <p>@responseFromProvider</p>
 </EditForm>
@@ -355,116 +348,66 @@ else
     .subscriber-list {
         list-style-type: none;
         padding: 0;
-        
+        margin: 0;
     }
 
     .subscriber-item {
         display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-        
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
     }
 
-    .newsletter{
-        margin-bottom:30px;
+    .subscriber-email {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
     }
-    .btn-add-to {
-        margin-right: 2px;
-        padding: 5px 10px;
+
+    .button-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 16px;
         font-size: 14px;
         border: none;
         border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn-add-to {
         background-color: #007bff;
         color: #fff;
-        cursor: pointer;
     }
 
         .btn-add-to:hover {
             background-color: #0056b3;
         }
 
-    
-    .info-user {
-        background-color: #d4edda; 
-        color: #0f5132;
-        padding: 10px; 
-        border: 1px solid #c3e6cb;
-        border-radius: 5px; 
-        font-size: 16px; 
-        margin-top:10px;
-        margin-bottom: 10px;
-    }
     .btn-delete {
-        margin-right: 20px;
-        padding: 5px 10px;
-        font-size: 14px;
-        border: none;
-        border-radius: 5px;
         background-color: red;
         color: #fff;
-        cursor: pointer;
     }
 
         .btn-delete:hover {
             background-color: darkred;
         }
-    .email-form {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        margin-top:30px;
-        padding-top:30px;
-    }
 
-    .form-group {
-        margin-bottom:10px;
-        width: 100%;
-    }
-
-    label {
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;
-        font-size: 16px;
-    }
-
-    .btn-add-all-subs {
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-        background-color: #007bff;
+    .btn-update {
+        background-color: #28a745;
         color: #fff;
-        cursor: pointer;
-        margin-bottom:30px;
     }
 
-        .btn-add-all-subs:hover {
-            background-color: #0056b3;
+        .btn-update:hover {
+            background-color: #218838;
         }
-    .btn {
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-        background-color: #007bff;
-        color: #fff;
-        cursor: pointer;
-    }
-
-        .btn:hover {
-            background-color: #0056b3;
-        }
-
 </style>
-
-
 
 
