@@ -33,10 +33,8 @@
     protected override async Task OnInitializedAsync()
     {
 
-        var user = await DbContext.Users.ToListAsync();
-
+        userList = await DbContext.Users.ToListAsync();
         await LoadUsers();
-        user = userList;
         await LoadUsersWithRoles();
 
     }
@@ -111,7 +109,7 @@
         ShowUserForm = true;
         infoFromSelectedUser = user;
 
-        // Kopiera data från den valda användaren till basicInfoForm
+   
         basicInfoForm.Id = user.Id;
         basicInfoForm.FirstName = user.FirstName!;
         basicInfoForm.LastName = user.LastName!;
@@ -140,8 +138,8 @@
                 if (result.Succeeded)
                 {
                     statusMessage = true;
-                    await LoadUsers(); // Ladda om användarlistan efter uppdatering
-                    ShowUserForm = false; // Stäng formuläret efter uppdatering
+                    await LoadUsers(); 
+                    ShowUserForm = false; 
                 }
                 else
                 {
@@ -243,18 +241,18 @@
 
         @if (userList != null && userList.Any())
         {
-            <h1>Web Application Blazor: User Service</h1>
-
-            <p>Users:</p>
+           
+            <h1>Users</h1>
             <div class="user-container">
                 @foreach (var userWithRoles in userListWithRoles)
                 {
                     <div class="user-card">
+                         <img src="/Images/avatar.svg" alt="Alternate Text" />
                         <div><strong>@userWithRoles.User.FirstName @userWithRoles.User.LastName</strong></div>
                         <div>Email: @userWithRoles.User.Email</div>
                         <div>Phone: @userWithRoles.User.PhoneNumber</div>
                         <div>Bio: @userWithRoles.User.Biography</div>
-                        <div>Email Confirmed?: @userWithRoles.User.EmailConfirmed</div>
+                        <div>Email Confirmed: @userWithRoles.User.EmailConfirmed</div>
                         @if (userWithRoles.Roles.Contains("ADMIN"))
                         {
                             <div>Role: Admin</div>
@@ -299,10 +297,7 @@
 
                 </div>
             }
-            <div>
-                <h5>Create Admin user</h5>
-                <button class="btn btn-lg btn-primary">Create</button>
-            </div>
+           
         }
         else
         {
@@ -317,25 +312,3 @@
  
     
 
-
-<style>
-   .user-container {
-    display: flex;
-    flex-wrap: wrap;
-    
-    gap: 20px;
-}
-
-    .user-card {
-        background-color: #f8f9fa;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        padding: 10px;
-        width: calc(33.3333% - 20px);
-        box-sizing: border-box;
-    }
-
-    
-
-
-</style>

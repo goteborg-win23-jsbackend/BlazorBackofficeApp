@@ -227,11 +227,14 @@ else
         @foreach (var subscriber in subscribers)
         {
             <li class="subscriber-item">
+                
                 <h5 class="subscriber-email">@subscriber.Email</h5>
                 <div class="button-group">
+                    <img src="/Images/avatar.svg" alt="Alternate Text" />
                     <button @onclick="@(() => AddToEmail(subscriber.Email))" class="btn btn-add-to">Add Subscriber to Form</button>
                     <button @onclick="@(() => ShowOption(subscriber.Email))" class="btn btn-delete">Delete Subscriber</button>
                     <button @onclick="@(() => ShowUpdateOption(subscriber))" class="btn btn-update">Update Subscriber</button>
+                   
                 </div>
             </li>
         }
@@ -371,6 +374,11 @@ else
     .button-group {
         display: flex;
         gap: 10px;
+        
+        img{
+            width:50px;
+            height:50px;
+        }
     }
 
     .btn {

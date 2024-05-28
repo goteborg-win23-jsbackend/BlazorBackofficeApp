@@ -1,1 +1,21 @@
-﻿
+﻿.user-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.user-card {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom:20px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+    .user-container {
+        
+        display:block;
+    }
+}
