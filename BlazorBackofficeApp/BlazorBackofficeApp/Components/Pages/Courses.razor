@@ -25,7 +25,64 @@
                 </EditForm>
             </div>
         }
+        @if (showUpdateForm)
+        {
+            <div class="create-course-form">
+                <h2>Update Course</h2>
+                <EditForm Model="courseUpdateRequest" OnValidSubmit="UpdateCourseFromForm">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
 
+                    <div class="form-group">
+                        <label>Image URI:</label>
+                        <InputText @bind-Value="courseUpdateRequest.ImageUri" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Image Header URI:</label>
+                        <InputText @bind-Value="courseUpdateRequest.ImageHeaderUri" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Is Best Seller:</label>
+                        <InputCheckbox @bind-Value="courseUpdateRequest.IsBestSeller" />
+                    </div>
+                    <div class="form-group">
+                        <label>Is Digital:</label>
+                        <InputCheckbox @bind-Value="courseUpdateRequest.IsDigital" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title:</label>
+                        <InputText @bind-Value="courseUpdateRequest.Title" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ingress:</label>
+                        <InputText @bind-Value="courseUpdateRequest.Ingress" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Star Rating:</label>
+                        <InputNumber @bind-Value="courseUpdateRequest.StarRating" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Reviews:</label>
+                        <InputText @bind-Value="courseUpdateRequest.Reviews" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Likes in Percent:</label>
+                        <InputText @bind-Value="courseUpdateRequest.LikesInPercent" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Likes:</label>
+                        <InputText @bind-Value="courseUpdateRequest.Likes" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Hours:</label>
+                        <InputText @bind-Value="courseUpdateRequest.Hours" class="form-control" />
+                    </div>
+
+                    <button type="submit" class="btn-create">Update Course</button>
+                </EditForm>
+            </div>
+        }
         <div class="title-input-field">
             <h1>Courses</h1>
         </div>
@@ -40,7 +97,7 @@
                             <p>@course.Id</p>
 
                             <div class="buttons">
-                                <button class="btn-update" @onclick="async () => await UpdateCourse(course.Id)">Update</button>
+                                <button class="btn-update" @onclick="async () => await ShowUpdateForm(course.Id)">Update</button>
                                 <button class="btn-delete" @onclick="async () => await DeleteCourse(course.Id)">Delete</button>
 
                             </div>
@@ -204,8 +261,13 @@
     private List<CourseCardModel>? courses;
     private List<Course>? oneCourse;
     private bool showCreateForm = false;
+    private bool showUpdateForm = false;
     private CourseCreateRequest newCourse = new CourseCreateRequest();
 
+    [SupplyParameterFromForm]
+    private CourseCreateRequest courseUpdateRequest { get; set; } = new();
+
+    private string selectedUpdate = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -241,7 +303,7 @@
             if (response.IsSuccessStatusCode)
             {
                 isCourseDeletedSuccessfully = true;
-          
+
                 await OnInitializedAsync();
                 StateHasChanged();
                 return true;
@@ -249,7 +311,7 @@
             else
             {
                 isCourseDeletedSuccessfully = false;
-             
+
                 await OnInitializedAsync();
                 return false;
             }
@@ -259,7 +321,7 @@
 
 
             isCourseDeletedSuccessfully = false;
-           
+
             await OnInitializedAsync();
             return false;
         }
@@ -274,10 +336,25 @@
             await OnInitializedAsync(); 
         }
     }
+    private async Task UpdateCourseFromForm()
+    {
+
+        await UpdateCourse(selectedUpdate,  courseUpdateRequest);
+
+        showUpdateForm = false;
+        await OnInitializedAsync();
+
+    }
 
     private void ShowCreateForm()
     {
         showCreateForm = true;
+    }
+    private async Task ShowUpdateForm(string id)
+    {
+        selectedUpdate = id;
+        showUpdateForm = true;
+        await GetOneCourseMethod(id);
     }
     private async Task<bool> CreateCourse(CourseCreateRequest input)
     {
@@ -392,58 +469,168 @@
         }
     }
 
-
-
-    private async Task<bool> UpdateCourse(string courseId)
+    private async Task GetOneCourseMethod(string courseId)
     {
         try
         {
-
-            var existingCourse = await GetOneCourse(courseId);
-
-            var courseUpdated = new CourseCardModel
-                {
-                    Title = "Apa",
-
-                };
-
-            if (existingCourse != null)
+            var query = new
             {
-         
-                existingCourse.Title = courseUpdated.Title;
-                
+                query = $@"
+                    {{
+                    getCourseById(id: ""{courseId}"") {{
+                    id
+                    imageUri
+                    imageHeaderUri
+                    isBestSeller
+                    isDigital
+                    categories
+                    title
+                    ingress
+                    starRating
+                    reviews
+                    likesInPercent
+                    likes
+                    hours
+                    authors {{
 
-                var requestBody = new
-                {
-                    query = $"mutation ($input: CourseUpdateRequestInput!) {{ updateCourse(input: $input) }}",
-                    variables = new
-                    {
-                        input = new
-                        {
+                        name
 
-                            
-                            
-                        }
-                    }
-                };
+                    }}
+                    prices {{
+                        price
+                        discount
 
-       
-                var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", requestBody);
+                    }}
+                    content {{
+                        description
+                        includes
+                        programDetails {{
+                        id
+                        title
+                        description
+                        }}
+                    }}
+                    }}
+                    }}"
+            };
 
-                return response.IsSuccessStatusCode;
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var jsonResponse = JsonDocument.Parse(jsonString);
+
+
+                courseUpdateRequest = JsonSerializer.Deserialize<CourseCreateRequest>(
+                jsonResponse.RootElement.GetProperty("data").GetProperty("getCourseById").ToString(),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+                // Extrahera kursdata från JSON-svaret
+                // var courseData = jsonResponse.RootElement.GetProperty("data").GetProperty("getCourseById");
+
+
+                // Skapa en ny instans av CourseUpdateRequestInput och sätt värdena från GraphQL-svaret
+                // var courseUpdateRequest = new CourseUpdateRequestInput
+                //     {
+                //         Id = courseData.GetProperty("id").GetString(),
+                //         ImageUri = courseData.GetProperty("imageUri").GetString(),
+                //         ImageHeaderUri = courseData.GetProperty("imageHeaderUri").GetString(),
+                //         IsBestSeller = courseData.GetProperty("isBestSeller").GetBoolean(),
+                //         IsDigital = courseData.GetProperty("isDigital").GetBoolean(),
+                //         Categories = JsonSerializer.Deserialize<List<string>>(courseData.GetProperty("categories").ToString()),
+                //         Title = courseData.GetProperty("title").GetString(),
+                //         Ingress = courseData.GetProperty("ingress").GetString(),
+                //         StarRating = courseData.GetProperty("starRating").GetInt32(),
+                //         Reviews = courseData.GetProperty("reviews").GetString(),
+                //         LikesInPercent = courseData.GetProperty("likesInPercent").GetString(),
+                //         Likes = courseData.GetProperty("likes").GetString(),
+                //         Hours = courseData.GetProperty("hours").GetString(),
+                //         Authors = JsonSerializer.Deserialize<List<Author>>(courseData.GetProperty("authors").ToString()),
+                //         Prices = JsonSerializer.Deserialize<Prices>(courseData.GetProperty("prices").ToString()),
+                //         Content = JsonSerializer.Deserialize<Content>(courseData.GetProperty("content").ToString())
+                //     };
+
+                // return courseUpdateRequest;
+
             }
             else
             {
-        
-                return false;
+                // Om förfrågan misslyckas, kasta ett undantag eller hantera felet på lämpligt sätt
+                throw new Exception("Failed to retrieve course data.");
             }
         }
         catch (Exception ex)
         {
-        
 
-            return false;
+
         }
+    }
+
+
+    private async Task<bool> UpdateCourse(string courseId, CourseCreateRequest input)
+    {
+        // mutation ($input: CourseUpdateRequestInput!) { updateCourse(input: $input) { id title } }"
+        var requestBody = new
+        {
+            query = "mutation ($input: CourseUpdateRequestInput!) { updateCourse(input: $input) { id title } }",
+            variables = new
+            {
+                input = new
+                {
+                        id = courseId,
+                        imageUri = input.ImageUri,
+                        imageHeaderUri = input.ImageHeaderUri,
+                        isBestSeller = input.IsBestSeller,
+                        isDigital = input.IsDigital,
+                        title = input.Title,
+                        ingress = input.Ingress,
+                        starRating = input.StarRating,
+                        reviews = input.Reviews,
+                        likesInPercent = input.LikesInPercent,
+                        likes = input.Likes,
+                        hours = input.Hours,
+                        authors = new[]
+                        {
+                            new { name = "Robert Fox" }
+                        },
+                        prices = new
+                        {
+                            currency = "USD",
+                            price = 12.50,
+                            discount = 0
+                        },
+                        content = new
+                        {
+                            description = "<p>This is a course that will teach you everything you need to know to start creating fullstack web applications from scratch all by yourself.</p>",
+                            includes = new[]
+                        {
+                            "148 hours on-demand video",
+                            "10 articles",
+                            "25 downloadable resources",
+                            "Full lifetime access",
+                            "Certificate of completion"
+                        },
+                            programDetails = new[]
+                            {
+                                new { id = 1, title = "Introduction. Getting Started", description = "Learn the basics and get started with your first projects." },
+                                new { id = 2, title = "The Ultimate HTML developer: advanced HTML", description = "Explore advanced HTML techniques and build complex webpages" },
+                                new { id = 3, title = "CSS & CSS3: basic", description = "Basic and advanced use of CSS to design web pages." },
+                                new { id = 4, title = "Understanding APIs", description = "Understand and integrate various APIs into your projects" },
+                                new { id = 5, title = "Python from beginner to advanced", description = "A deep dive into Python programming, from beginner to advanced level." }
+                            }
+                        }
+                    }
+                }
+            };
+
+       
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", requestBody);
+
+            return response.IsSuccessStatusCode;
+          
+            
+       
     }
 }
   
