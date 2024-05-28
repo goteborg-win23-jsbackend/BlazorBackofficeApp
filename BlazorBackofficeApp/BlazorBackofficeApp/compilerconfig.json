@@ -10,5 +10,9 @@
   {
     "outputFile": "Components/Pages/Courses.razor.css",
     "inputFile": "Components/Pages/Courses.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Subscribers.razor.css",
+    "inputFile": "Components/Pages/Subscribers.razor.scss"
   }
 ]

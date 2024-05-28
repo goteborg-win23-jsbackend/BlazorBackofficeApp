@@ -11,11 +11,18 @@
     padding: 10px;
     margin-bottom:20px;
     box-sizing: border-box;
+
+    button{
+              
+          }
 }
 
 @media (max-width: 1200px) {
     .user-container {
         
         display:block;
+    }
+    button {
+        padding: 3px;
     }
 }
