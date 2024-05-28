@@ -7,6 +7,7 @@ using BlazorBackofficeApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 var builder = WebApplication.CreateBuilder(args);
 

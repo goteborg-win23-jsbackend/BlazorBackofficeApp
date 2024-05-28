@@ -1,0 +1,414 @@
+﻿@page "/createcourse"
+@using BlazorBackofficeApp.Components.Account
+@using static System.Net.WebRequestMethods
+@inject HttpClient Http
+
+@inject IdentityRedirectManager RedirectManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create course</PageTitle>
+
+@rendermode InteractiveServer
+
+<div class="container">
+
+    <h1>Create new course!</h1>
+
+    <div class="create-course">
+        <EditForm FormName="createcourse" Model="newCourse" OnValidSubmit=" CreateNewCourse">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="form-create">
+                <h4>Course Images</h4>
+                <div class="text">
+                    <label for="imageUri">Image URI</label>
+                    <InputText class="form-control" id="imageUri" @bind-Value="newCourse.ImageUri" />
+                </div>
+
+                <div class="text">
+                    <label for="imageHeaderUri">Image Header URI</label>
+                    <InputText class="form-control" id="imageHeaderUri" @bind-Value="newCourse.ImageHeaderUri" />
+                </div>
+
+                <div class="checkboxes">
+                    <h4> Course Attributes</h4>
+                    <div>
+                        <label for="isBestSeller">Is Best Seller</label>
+                        <InputCheckbox id="isBestSeller" @bind-Value="newCourse.IsBestSeller" />
+                    </div>
+
+                    <div>
+                        <label for="isDigital">Is Digital</label>
+                        <InputCheckbox id="isDigital" @bind-Value="newCourse.IsDigital" />
+                    </div>
+
+                    <div>
+                        <h4>Categories</h4>
+                        @foreach (var category in availableCategories)
+                        {
+                            <div>
+                                <label>
+                                    <InputCheckbox @bind-Value="categorySelections[category]" />
+                                    @category
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <h4>Course Details and Metrics</h4>
+                <div class="text">
+                    <label for="title">Title</label>
+                    <InputText class="form-control" id="title" @bind-Value="newCourse.Title" />
+                </div>
+
+                <div class="text">
+                    <label for="ingress">Ingress</label>
+                    <InputTextArea class="form-control" id="ingress" @bind-Value="newCourse.Ingress" />
+                </div>
+
+                <div class="text">
+                    <label for="starRating">Star Rating</label>
+                    <InputNumber class="form-control" id="starRating" @bind-Value="newCourse.StarRating" />
+                </div>
+
+                <div class="text">
+                    <label for="reviews">Reviews</label>
+                    <InputText class="form-control" id="reviews" @bind-Value="newCourse.Reviews" />
+                </div>
+
+                <div class="text">
+                    <label for="likesInPercent">Likes In Percent</label>
+                    <InputText class="form-control" id="likesInPercent" @bind-Value="newCourse.LikesInPercent" />
+                </div>
+
+                <div class="text">
+                    <label for="likes">Likes</label>
+                    <InputText class="form-control" id="likes" @bind-Value="newCourse.Likes" />
+                </div>
+
+                <div>
+                    <label for="hours">Hours</label>
+                    <InputText class="form-control" id="hours" @bind-Value="newCourse.Hours" />
+                </div>
+
+
+                @if (newCourse.Authors != null)
+                {
+                    @foreach (var author in newCourse.Authors)
+                    {
+                        <div>
+                            <label for="authorName">Author Name</label>
+                            <InputText class="form-control" id="authorName" @bind-Value="author.Name" />
+                        </div>
+                    }
+                }
+
+                <h4>Prices</h4>
+                @if (newCourse.Prices != null)
+                {
+                    <div>
+                        <label for="currency">Currency</label>
+                        <InputText class="form-control" id="currency" @bind-Value="newCourse.Prices.Currency" />
+                    </div>
+
+                    <div>
+                        <label for="price">Price</label>
+                        <InputNumber class="form-control" id=" price" @bind-Value="newCourse.Prices.Price" />
+                    </div>
+
+                    <div>
+                        <label for="discount">Discount</label>
+                        <InputNumber class="form-control" id="discount" @bind-Value="newCourse.Prices.Discount" />
+                    </div>
+                }
+
+                <h4>Content</h4>
+                <div>
+                    <label for="contentDescription">Content Description</label>
+                    <InputTextArea class="form-control" id="contentDescription" @bind-Value="newCourse.Content.Description" />
+                </div>
+
+                <div>
+                    <label for="contentIncludes">Content Includes</label>
+
+                    <InputText class="form-control" @bind-Value="newIncludeValue" placeholder="Enter new include" />
+                    <button type="button" @onclick="AddInclude">Add Include</button>
+                </div>
+
+
+                <h4>Program Details</h4>
+                @if (newCourse.Content.ProgramDetails != null)
+                {
+                    @for (int i = 0; i < newCourse.Content.ProgramDetails.Count; i++)
+                    {
+                        var stepNumber = i + 1;
+                        var detail = newCourse.Content.ProgramDetails[i];
+
+
+                        <div>
+                            <h5>Step @stepNumber</h5>
+                            <div>
+                                <label for="detailTitle">Title</label>
+                                <InputText class="form-control" id="detailTitle" @bind-Value="detail.Title" />
+                            </div>
+
+                            <div>
+                                <label for="detailDescription">Description</label>
+                                <InputText class="form-control" id="detailDescription" @bind-Value="detail.Description" />
+                            </div>
+                        </div>
+                    }
+
+                    <button type="button" @onclick="AddProgramDetail">Add Program Detail</button>
+                }
+
+                <button type="submit">Create Course</button>
+            </div>
+
+        </EditForm>
+
+        @if (StatusMessage == "Success")
+        {
+            <div class="alert alert-success" role="alert">
+                Course was created! Redirecting ..
+                <div class="spinner-border" role="status">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
+
+        }
+        else if (StatusMessage == "Error")
+        {
+            <div class="alert alert-danger" role="alert">
+                Something went wrong!
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+
+
+
+@code {
+
+    private string newIncludeValue = "";
+
+    [SupplyParameterFromForm]
+    public CourseCreateRequest newCourse { get; set; } = new()
+        {
+            Prices = new PricesCreateRequest(),
+            Content = new ContentCreateRequest
+            {
+                Includes = Array.Empty<string>(),
+                ProgramDetails = new List<ProgramDetailItemCreateRequest>
+        {
+            new ProgramDetailItemCreateRequest()
+        }
+            },
+            Authors = new List<AuthorCreateRequest>
+            {
+                new AuthorCreateRequest()
+            }
+        };
+
+
+
+    private string StatusMessage = "";
+
+
+    private List<string> availableCategories = new List<string>
+    {
+        "Fullstack", "Web", "Developer", "HTML", "CSS", "JavaScript"
+    };
+
+    private Dictionary<string, bool> categorySelections = new Dictionary<string, bool>
+    {
+        { "Fullstack", false },
+        { "Web", false },
+        { "Developer", false },
+        { "HTML", false },
+        { "CSS", false },
+        { "JavaScript", false }
+    };
+
+    private void UpdateCategories()
+    {
+        newCourse.Categories = categorySelections
+            .Where(x => x.Value)
+            .Select(x => x.Key)
+            .ToArray();
+    }
+
+    private string categoriesString
+    {
+        get => string.Join(", ", newCourse.Categories ?? Array.Empty<string>());
+        set => newCourse.Categories = value.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private string includesString
+    {
+        get => string.Join(", ", newCourse.Content?.Includes ?? Array.Empty<string>());
+        set
+        {
+            if (newCourse.Content != null)
+            {
+                newCourse.Content.Includes = value.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+    }
+
+    void AddInclude()
+    {
+        if (!string.IsNullOrWhiteSpace(newIncludeValue))
+        {
+            var includes = newCourse.Content.Includes.ToList();
+            includes.Add(newIncludeValue);
+            newCourse.Content.Includes = includes.ToArray();
+            newIncludeValue = "";
+            StateHasChanged();
+        }
+    }
+
+    void RemoveInclude(int index)
+    {
+        var includes = newCourse.Content.Includes.ToList();
+        includes.RemoveAt(index);
+        newCourse.Content.Includes = includes.ToArray();
+    }
+
+    void AddProgramDetail()
+    {
+        if (newCourse.Content == null)
+        {
+            newCourse.Content = new ContentCreateRequest();
+            newCourse.Content.ProgramDetails = new List<ProgramDetailItemCreateRequest>();
+        }
+
+
+        int newDetailId = newCourse.Content.ProgramDetails.Count + 1;
+
+        newCourse.Content.ProgramDetails.Add(new ProgramDetailItemCreateRequest
+            {
+                Id = newDetailId
+            });
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateCategories();
+    }
+
+
+
+    public async Task CreateNewCourse(EditContext editContext)
+    {
+        UpdateCategories();
+
+        var requestBody = new
+        {
+            query = "mutation ($input: CourseCreateRequestInput!) { createCourse(input: $input) { id title } }",
+            variables = new
+            {
+                input = new
+                {
+                    imageUri = newCourse.ImageUri,
+                    imageHeaderUri = newCourse.ImageHeaderUri,
+                    isBestSeller = newCourse.IsBestSeller,
+                    isDigital = newCourse.IsDigital,
+                    categories = newCourse.Categories,
+                    title = newCourse.Title,
+                    ingress = newCourse.Ingress,
+                    starRating = newCourse.StarRating,
+                    reviews = newCourse.Reviews,
+                    likesInPercent = newCourse.LikesInPercent,
+                    likes = newCourse.Likes,
+                    hours = newCourse.Hours,
+                    authors = newCourse.Authors.Select(a => new { name = a.Name }).ToArray(),
+                    prices = new
+                    {
+                        currency = newCourse.Prices.Currency,
+                        price = newCourse.Prices.Price,
+                        discount = newCourse.Prices.Discount
+                    },
+                    content = new
+                    {
+                        description = newCourse.Content.Description,
+                        includes = newCourse.Content.Includes,
+                        programDetails = newCourse.Content.ProgramDetails.Select(pd => new
+                        {
+                            id = pd.Id,
+                            title = pd.Title,
+                            description = pd.Description
+                        }).ToList()
+                    }
+                }
+            }
+        };
+
+        var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", requestBody);
+
+        if (response.IsSuccessStatusCode)
+        {
+            StatusMessage = "Success";
+
+            StateHasChanged();
+            await Task.Delay(3000);
+
+            NavigationManager.NavigateTo("/courses");
+        }
+        else
+        {
+            StatusMessage = "Error";
+        }
+    }
+
+    public class CourseCreateRequest
+    {
+        public string? ImageUri { get; set; }
+        public string? ImageHeaderUri { get; set; }
+        public bool IsBestSeller { get; set; }
+        public bool IsDigital { get; set; }
+        public string[]? Categories { get; set; }
+        public string? Title { get; set; }
+        public string? Ingress { get; set; }
+        public decimal StarRating { get; set; }
+        public string? Reviews { get; set; }
+        public string? LikesInPercent { get; set; }
+        public string? Likes { get; set; }
+        public string? Hours { get; set; }
+        public virtual List<AuthorCreateRequest>? Authors { get; set; }
+        public virtual PricesCreateRequest? Prices { get; set; }
+        public virtual ContentCreateRequest? Content { get; set; }
+    }
+
+
+    public class AuthorCreateRequest
+    {
+        public string? Name { get; set; }
+    }
+
+    public class PricesCreateRequest
+    {
+        public string? Currency { get; set; }
+        public decimal Price { get; set; }
+        public decimal Discount { get; set; }
+    }
+
+    public class ContentCreateRequest
+    {
+        public string? Description { get; set; }
+        public string[]? Includes { get; set; }
+        public virtual List<ProgramDetailItemCreateRequest>? ProgramDetails { get; set; }
+    }
+
+    public class ProgramDetailItemCreateRequest
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+    }
+}

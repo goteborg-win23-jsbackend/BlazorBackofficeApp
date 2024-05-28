@@ -2,5 +2,13 @@
   {
     "outputFile": "Components/Pages/Home.razor.css",
     "inputFile": "Components/Pages/Home.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/CreateCourse.razor.css",
+    "inputFile": "Components/Pages/CreateCourse.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Courses.razor.css",
+    "inputFile": "Components/Pages/Courses.razor.scss"
   }
 ]
