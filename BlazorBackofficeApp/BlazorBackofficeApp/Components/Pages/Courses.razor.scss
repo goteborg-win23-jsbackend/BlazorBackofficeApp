@@ -155,7 +155,16 @@
     }
 }
 
-
+.update-popup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: lightgreen;
+    border: 1px, solid, green;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
 
 
 

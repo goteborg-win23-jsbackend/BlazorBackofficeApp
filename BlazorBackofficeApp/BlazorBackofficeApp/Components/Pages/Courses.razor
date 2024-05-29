@@ -9,7 +9,12 @@
 
 <section id="courses">
     <div class="container">
-            
+        @if (showForFewSeconds)
+        {
+            <div class="update-popup"> 
+                <p>Course Has been updated</p>
+            </div>
+        }
         @if (showUpdateForm)
         {
             <div class="update-course-form">
@@ -140,7 +145,7 @@
 
 
 @code {
-
+    private bool showForFewSeconds = false;
     private bool isCourseDeletedSuccessfully = false;
     private List<Course>? courses;
     private List<Course>? oneCourse;
@@ -176,7 +181,7 @@
         {
             isLoading = false;
         }
-        
+
     }
 
 
@@ -220,6 +225,16 @@
         }
     }
 
+    private async Task ShowElement()
+    {
+        showForFewSeconds = true;
+        StateHasChanged();  // Uppdatera UI
+
+        await Task.Delay(8000);  // Vänta i 8 sekunder
+
+        showForFewSeconds = false;
+        StateHasChanged();  // Uppdatera UI
+    }
 
     private async Task UpdateCourseFromForm()
     {
@@ -228,6 +243,7 @@
 
         showUpdateForm = false;
         await OnInitializedAsync();
+        await ShowElement();
 
     }
 
