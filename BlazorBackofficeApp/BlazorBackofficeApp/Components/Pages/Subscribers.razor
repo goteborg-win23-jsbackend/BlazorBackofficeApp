@@ -6,7 +6,7 @@
 @using Azure.Messaging.ServiceBus;
 @using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json;
-
+@attribute [StreamRendering]
 
 @inject UserService UserService
 @inject HttpClient HttpClient
@@ -30,10 +30,18 @@
     private EmailRequest emailForm = new EmailRequest();
 
 
-    protected override async Task OnInitializedAsync()
+    private bool isLoading = true; 
 
+    protected override async Task OnInitializedAsync()
     {
-        subscribers = await UserService.GetAllUsersAsync();
+        try
+        {
+            subscribers = await UserService.GetAllUsersAsync();
+        }
+        finally
+        {
+            isLoading = false; 
+        }
 
         ServiceBusConnectionString = Configuration["ServiceBusConnection"]!;
         if (string.IsNullOrEmpty(ServiceBusConnectionString))
@@ -213,12 +221,13 @@
     }
 }
 
-
 <h3>Subscribers</h3>
 
-@if (subscribers == null)
+@if (isLoading)
 {
-    <p>Loading...</p>
+    <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+    </div>
 }
 
 else

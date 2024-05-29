@@ -5,6 +5,7 @@
 @inject HttpClient Http
 @rendermode InteractiveServer
 @attribute [Authorize]
+@attribute [StreamRendering]
 
 <section id="courses">
     <div class="container">
@@ -74,45 +75,55 @@
             <h1>Courses</h1>
         </div>
         <div class="articles">
-            @if (courses != null)
+            @if (isLoading)
             {
-                @foreach (var course in courses)
+                <div class="spinner-border" role="status">
+                    <span class="sr-only"></span>
+                </div>
+            }
+            else
+            {
+                @if (courses != null)
                 {
-                    <div class="course-card">
-                        <div class="course-image">
-                            <img src="@course.ImageUri" alt="Course Image">
-                        </div>
-                        <div class="course-info">
-                            <h2 class="course-title">@course.Title</h2>
-                            <p class="course-ingress">@course.Ingress</p>
-                            <div class="course-rating">
-                                <span>⭐ @course.StarRating</span>
-                                <span>(@course.Reviews reviews)</span>
+                    @foreach (var course in courses)
+                    {
+                        <div class="course-card">
+                            <div class="course-image">
+                                <img src="@course.ImageUri" alt="Course Image">
                             </div>
-                            <div class="course-price">
+                            <div class="course-info">
+                                <h2 class="course-title">@course.Title</h2>
+                                <p class="course-ingress">@course.Ingress</p>
+                                <div class="course-rating">
+                                    <span>⭐ @course.StarRating</span>
+                                    <span>(@course.Reviews reviews)</span>
+                                </div>
+                                <div class="course-price">
 
-                                @if (course.Prices.Discount <= 0)
-                                {
-                                    <span class="current-price">@course.Prices.Price</span>
-                                }
-                                else
-                                {
-                                    <span class="current-price">@course.Prices.Price</span>
-                                    <span class="discount-price">@course.Prices.Discount</span>
-                                }
+                                    @if (course.Prices.Discount <= 0)
+                                    {
+                                        <span class="current-price">@course.Prices.Price</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="current-price">@course.Prices.Price</span>
+                                        <span class="discount-price">@course.Prices.Discount</span>
+                                    }
 
-                            </div>
-                            <div class="course-authors">
-                                <span>By: @course.Authors?.FirstOrDefault()?.Name</span>
-                            </div>
-                            <div class="course-actions">
-                                <button class="update-button" @onclick="async () => await ShowUpdateForm(course.Id)">Update</button>
-                                <button class="delete-button" @onclick="async () => await DeleteCourse(course.Id)">Delete</button>
+                                </div>
+                                <div class="course-authors">
+                                    <span>By: @course.Authors?.FirstOrDefault()?.Name</span>
+                                </div>
+                                <div class="course-actions">
+                                    <button class="update-button" @onclick="async () => await ShowUpdateForm(course.Id)">Update</button>
+                                    <button class="delete-button" @onclick="async () => await DeleteCourse(course.Id)">Delete</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
             }
+           
         </div>
         @if (isCourseDeletedSuccessfully)
         {
@@ -136,6 +147,7 @@
     private bool showCreateForm = false;
     private bool showUpdateForm = false;
     private CourseCreateRequest newCourse = new CourseCreateRequest();
+    private bool isLoading = true;
 
     [SupplyParameterFromForm]
     private CourseCreateRequest courseUpdateRequest { get; set; } = new();
@@ -144,19 +156,27 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var query = new
+        try
         {
-            query = "{ getAllCourses { id title imageUri authors { name } prices { price discount } reviews ingress starRating } }"
-        };
+            var query = new
+            {
+                query = "{ getAllCourses { id title imageUri authors { name } prices { price discount } reviews ingress starRating } }"
+            };
 
-        var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
-        var jsonString = await response.Content.ReadAsStringAsync();
-        var jsonResponse = JsonDocument.Parse(jsonString);
+            var response = await Http.PostAsJsonAsync("https://gbgcourseprovider.azurewebsites.net/api/graphql?code=uAMkjucuAPkVqyLMmbal_N8rxyPXJslqzzde7JdZTWIKAzFuhtmdNA%3D%3D", query);
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var jsonResponse = JsonDocument.Parse(jsonString);
 
-        courses = JsonSerializer.Deserialize<List<Course>>(
-            jsonResponse.RootElement.GetProperty("data").GetProperty("getAllCourses").ToString(),
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        );
+            courses = JsonSerializer.Deserialize<List<Course>>(
+                jsonResponse.RootElement.GetProperty("data").GetProperty("getAllCourses").ToString(),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        
     }
 
 
