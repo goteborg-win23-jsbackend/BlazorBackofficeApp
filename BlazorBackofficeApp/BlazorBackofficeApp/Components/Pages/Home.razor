@@ -48,13 +48,13 @@
         var result = await UserService.DeleteUser(userId);
         if (result)
         {
-            resultDelete = "User was deleted succesfully";
+            resultDelete = "Success";
             userList = await DbContext.Users.ToListAsync();
             showDeleteConfirmation = false;
         }
         else
         {
-            resultDelete = "Error deleting user.";
+            resultDelete = "Error";
         }
     }
     private async Task LoadUsers()
@@ -68,13 +68,13 @@
         var result = await UserService.UpdateRole(userId);
         if (result)
         {
-            resultUpdate = "User was updated to admin";
+            resultUpdate = "Success";
             userList = await DbContext.Users.ToListAsync();
             showUpdateConfirmation = false;
         }
         else
         {
-            resultUpdate = "Error updating user.";
+            resultUpdate = "Error";
         }
     }
 
@@ -234,15 +234,46 @@
 
         @if (statusMessage)
         {
-            <div class="info-user">User was updated successfully</div>
+            <div class="alert alert-success" role="alert">
+                User was updated successfully
+            </div>
+          
         }
      
-        
+            @if(resultUpdate == "Error")
+            {
+                <div class="alert alert-danger" role="alert">
+                    Something went wrong!
+                </div>
+            }
+            else if(resultUpdate == "Success") 
+            {
+                <div class="alert alert-success" role="alert">
+                    User was updated to admin!
+                </div>
+            }
+            @if (resultDelete == "Error")
+            {
+                <div class="alert alert-danger" role="alert">
+                    Something went wrong!
+                </div>
+            }
+            else if (resultDelete == "Success")
+            {
+                <div class="alert alert-success" role="alert">
+                    User was deleted successfully!
+                </div>
+}
 
         @if (userList != null && userList.Any())
         {
-           
+
+            <div class="title-box">
+               <div class="create-user-btn">
+                    <a href="/createuser">Create new user</a>                    
+                </div>
             <h1>Users</h1>
+            </div>
             <div class="user-container">
                 @foreach (var userWithRoles in userListWithRoles)
                 {
@@ -266,15 +297,12 @@
                         <button class="btn-mine" @onclick="() => ShowUpdateForm(userWithRoles.User)">Update</button>
                        
                         <button class="btn-mine" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
-                        <p>@resultDelete</p>
                     </div>
                 }
                 <h5>@resultDelete</h5>
                 <h5>@resultUpdate</h5>
-                <h5>@resultUpdate</h5>
-                
 
-                
+                            
             </div>
             @if (showDeleteConfirmation)
             {
@@ -303,11 +331,6 @@
         {
             <div>Loading</div>
         }
-
-        <div>
-        </div>
-
-        <AntiforgeryToken />
 
  
     

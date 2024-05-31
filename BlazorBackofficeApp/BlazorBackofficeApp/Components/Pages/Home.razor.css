@@ -12,9 +12,6 @@
     margin-bottom:20px;
     box-sizing: border-box;
 
-    button{
-              
-          }
 }
 
 @media (max-width: 1200px) {
@@ -26,3 +23,36 @@
         padding: 3px;
     }
 }
+
+
+.title-box {
+    text-align: center;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+        
+}
+
+.title-box h1 {
+
+    flex:1;
+    text-align: center;
+}
+.create-user-btn a {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+    .create-course-btn a:hover {
+        background-color: #0056b3;
+    }
+
+

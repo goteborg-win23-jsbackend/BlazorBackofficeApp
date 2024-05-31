@@ -14,5 +14,9 @@
   {
     "outputFile": "Components/Pages/Subscribers.razor.css",
     "inputFile": "Components/Pages/Subscribers.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/CreateUser.razor.css",
+    "inputFile": "Components/Pages/CreateUser.razor.scss"
   }
 ]

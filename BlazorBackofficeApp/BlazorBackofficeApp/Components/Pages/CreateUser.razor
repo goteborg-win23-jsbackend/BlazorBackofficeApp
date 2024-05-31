@@ -1,0 +1,180 @@
+﻿@page "/createuser"
+@using System.ComponentModel.DataAnnotations
+
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create User</PageTitle>
+
+
+<section id="create-user" class="d-flex justify-content-center   bg-light">
+    <div class="box bg-white p-5 rounded shadow-lg">
+        <div class="title text-center mb-4">
+            <h1>Create new account</h1>
+        </div>
+
+        @if (StatusMessage == "Error")
+        {
+            <div class="alert alert-danger" role="alert">
+                Something went wrong!
+            </div>
+        }
+        else if (StatusMessage == "Email")
+        {
+            <div class="alert alert-danger" role="alert">
+                A user with same email address already exists!
+            </div>
+        }
+        else if (StatusMessage == "Created")
+        {
+            <div class="alert alert-success" role="alert">
+                User was created! Redirecting ..
+                <div class="spinner-border" role="status">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
+        }
+
+
+        <EditForm FormName="createuser" Model="createUserForm" OnValidSubmit="RegisterUser" method="post" novalidate>
+            <DataAnnotationsValidator />
+
+            <div class="form-row mb-3">
+                <div class="col">
+                    <label>First name</label>
+                    <ValidationMessage For="@(() => createUserForm.FirstName)" class="text-danger" />
+                    <InputText @bind-Value="createUserForm.FirstName" placeholder="Enter first name" class="form-control" />
+                </div>
+                <div class="col">
+                    <label>Last name</label>
+                    <ValidationMessage For="@(() => createUserForm.LastName)" class="text-danger" />
+                    <InputText @bind-Value="createUserForm.LastName" placeholder="Enter last name" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Email address</label>
+                <ValidationMessage For="@(() => createUserForm.Email)" class="text-danger" />
+                <InputText @bind-Value="createUserForm.Email" type="email" placeholder="Enter email address" class="form-control" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Password</label>
+                <ValidationMessage For="@(() => createUserForm.Password)" class="text-danger" />
+                <InputText @bind-Value="createUserForm.Password" type="password" placeholder="**********" class="form-control" />
+            </div>
+
+            <div class="form-group mb-4">
+                <label>Confirm password</label>
+                <ValidationMessage For="@(() => createUserForm.ConfirmPassword)" class="text-danger" />
+                <InputText @bind-Value="createUserForm.ConfirmPassword" type="password" placeholder="**********" class="form-control" />
+            </div>
+
+            <div class="form-group mb-4">
+                <label>Role</label>
+                <InputSelect @bind-Value="createUserForm.Role" class="form-control">
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                </InputSelect>
+            </div>
+
+            @if (isLoading)
+            {
+                <button class="btn btn-primary w-100" type="button" disabled>
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Loading...
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-primary w-100" type="submit">Sign up</button>
+            }
+        </EditForm>
+    </div>
+</section>
+
+
+
+@code {
+
+    private bool isLoading = false;
+
+    [SupplyParameterFromForm]
+    public CreateUserModel createUserForm { get; set; } = new();
+
+
+    public string StatusMessage { get; set; } = null!;
+
+
+    private async Task RegisterUser(EditContext editContext)
+    {
+        isLoading = true;
+
+        var alreadyExists = await UserManager.FindByEmailAsync(createUserForm.Email);
+
+        if (alreadyExists != null)
+        {
+            StatusMessage = "Email";
+            return;
+        }
+
+        var user = new ApplicationUser
+            {
+                UserName = createUserForm.Email,
+                Email = createUserForm.Email,
+                FirstName = createUserForm.FirstName,
+                LastName = createUserForm.LastName
+            };
+
+        var result = await UserManager.CreateAsync(user, createUserForm.Password);
+
+        if(result.Succeeded)
+        {
+
+            var token = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            await UserManager.ConfirmEmailAsync(user, token);
+
+            await UserManager.AddToRoleAsync(user, createUserForm.Role);
+
+            StatusMessage = "Created";
+
+            StateHasChanged();
+            await Task.Delay(3000);
+
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            StatusMessage = "Error";
+        }
+    }
+
+    public class CreateUserModel
+    {
+        [DataType(DataType.Text)]
+        [Display(Name = "First name", Prompt = " Enter your first name", Order = 0)]
+        public string FirstName { get; set; } = null!;
+
+        [DataType(DataType.Text)]
+        [Display(Name = "Last name", Prompt = " Enter your last name", Order = 1)]
+        public string LastName { get; set; } = null!;
+
+        [DataType(DataType.EmailAddress)]
+        [Display(Name = "Email-address", Prompt = " Enter your email-address", Order = 2)]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = null!;
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Password", Prompt = " Enter your password", Order = 3)]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "Invalid password")]
+        public string Password { get; set; } = null!;
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password", Prompt = " Confirm your password", Order = 4)]
+        [Compare(nameof(Password), ErrorMessage = "Password does not match")]
+        public string ConfirmPassword { get; set; } = null!;
+
+        public string Role { get; set; } = "User";
+    };
+
+}

@@ -1,8 +1,42 @@
-.create-course-btn {
+
+
+.update-course-btn {
     display: block;
     margin-bottom: 20px;
     text-align: center;
     align-self: flex-start;
+
+    button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+            background-color: #0056b3;
+        }
+    }
+}
+
+.update-course-form {
+
+    border-bottom: 1px solid grey;
+    margin-bottom: 10px;
+}
+
+
+
+.create-course-btn {
+    display: block;
+    margin-bottom: 20px;
+    text-align: left;
+    flex: 1;
 
     a {
         display: inline-block;
@@ -30,8 +64,16 @@
 .title-input-field {
     text-align: center;
     margin-bottom: 20px;
-    display:grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h1 {
+
+        flex: 1;
+        text-align: left;
+    }
+
 
 }
 .articles {
