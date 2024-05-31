@@ -293,10 +293,10 @@
                             <div>Role: Member</div>
                         }
 
-                        <button class="btn-mine" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
-                        <button class="btn-mine" @onclick="() => ShowUpdateForm(userWithRoles.User)">Update</button>
-                       
-                        <button class="btn-mine" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(userWithRoles.User.Id)">Remove</button>
+                         <button class="btn btn-secondary" @onclick="() => ShowUpdateForm(userWithRoles.User)">Update</button>
+
+                        <button class="btn btn-primary" @onclick="() => ShowUpdateConfirmation(userWithRoles.User.Id)">Make Admin</button>
                     </div>
                 }
                 <h5>@resultDelete</h5>
